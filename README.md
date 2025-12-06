@@ -1,36 +1,179 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🔥 FireBug Navigator
 
-## Getting Started
+**Real-time yanğın aşkarlama, analiz və təhlükəsiz marşrut planlaması sistemi**
 
-First, run the development server:
+![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)
+![Tailwind](https://img.shields.io/badge/Tailwind-4-38B2AC?style=flat-square&logo=tailwindcss)
+![Leaflet](https://img.shields.io/badge/Leaflet-1.9-199900?style=flat-square&logo=leaflet)
+
+---
+
+## 🎯 Layihə Haqqında
+
+FireBug Navigator yanğın monitorinqi və analizi üçün hərtərəfli bir GIS platformasıdır. NASA FIRMS real-time data, Sentinel-2 peyk görüntüləri və OpenRouteService marşrut planlaması ilə inteqrasiya olunub.
+
+### Əsas Xüsusiyyətlər
+
+- 🗺️ **AOI Selection** - Xəritədə polygon/rectangle ilə ərazi seçimi
+- 🔥 **FIRMS Hotspots** - Real-time yanğın nöqtələri (VIIRS/MODIS)
+- 🛰️ **Sentinel Imagery** - Before/After peyk görüntüləri
+- 📊 **Burn Analysis** - dNBR əsaslı yanğın sahəsi təhlili
+- 🧭 **Safe Routing** - Yanğın ərazilərindən yan keçən marşrut
+- 📄 **Reporting** - PDF/CSV/GeoJSON export
+
+---
+
+## 🚀 Quraşdırma
+
+### Tələblər
+- Node.js 18+
+- npm/yarn/pnpm
+
+### Addımlar
 
 ```bash
+# Repository clone
+git clone https://github.com/your-repo/FireBug-navigator.git
+cd FireBug-navigator
+
+# Dependencies install
+npm install
+
+# Environment konfiqurasiyası
+cp .env.example .env.local
+# .env.local faylına API key-ləri əlavə edin
+
+# Development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Brauzer: http://localhost:3000
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🔑 API Keys
 
-## Learn More
+Aşağıdakı API key-ləri `.env.local` faylına əlavə edin:
 
-To learn more about Next.js, take a look at the following resources:
+| API | Əldə etmə linki | Tələb |
+|-----|-----------------|-------|
+| NASA FIRMS | https://firms.modaps.eosdis.nasa.gov/api/area/ | Pulsuz |
+| Sentinel Hub | https://www.sentinel-hub.com/ | Trial mövcud |
+| OpenRouteService | https://openrouteservice.org/dev/#/signup | Pulsuz tier |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```env
+NEXT_PUBLIC_FIRMS_API_KEY=your_key
+NEXT_PUBLIC_SENTINEL_CLIENT_ID=your_id
+NEXT_PUBLIC_SENTINEL_CLIENT_SECRET=your_secret
+NEXT_PUBLIC_ORS_API_KEY=your_key
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 📁 Layihə Strukturu
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+src/
+├── app/                    # Next.js App Router
+├── components/
+│   ├── ui/                # Reusable UI (Button, Card, Input)
+│   ├── map/               # Xəritə komponentləri
+│   ├── panels/            # Sidebar panelləri
+│   └── layout/            # Layout komponentləri
+├── services/              # API servisləri
+│   ├── firms.service.js   # NASA FIRMS
+│   ├── sentinel.service.js # Sentinel Hub
+│   └── routing.service.js # OpenRouteService
+├── store/                 # Zustand state
+└── lib/                   # Utilities
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+docs/
+├── ARCHITECTURE.md        # Sistem arxitekturası
+├── WORKFLOW.md           # İstifadə təlimatı
+├── QGIS_WORKFLOW.md      # QGIS burn detection
+└── components/           # Komponent dokumentasiyası
+```
+
+---
+
+## 🔄 İş Axını
+
+```
+1. AOI Seçimi     →  Xəritədə ərazi çəkin
+2. Hotspot Yüklə  →  FIRMS API-dən data alın
+3. Görüntü Al     →  Sentinel pre/post imagery
+4. QGIS Analiz    →  NBR/dNBR/Burn polygon
+5. Polygon Yüklə  →  GeoJSON import
+6. Marşrut Planı  →  Təhlükəsiz yol hesabla
+7. Hesabat        →  PDF/CSV export
+```
+
+---
+
+## 📊 Texnologiyalar
+
+| Kateqoriya | Texnologiya |
+|------------|-------------|
+| Frontend | Next.js 16, React 19 |
+| Styling | Tailwind CSS 4 |
+| State | Zustand |
+| Maps | Leaflet, React-Leaflet |
+| Drawing | Leaflet-Draw |
+| Geo Processing | Turf.js |
+| PDF | jsPDF |
+| HTTP | Axios |
+
+---
+
+## 📚 Dokumentasiya
+
+- [Sistem Arxitekturası](docs/ARCHITECTURE.md)
+- [İş Axını Təlimatı](docs/WORKFLOW.md)
+- [QGIS Burn Detection](docs/QGIS_WORKFLOW.md)
+- [Map Components](docs/components/MAP_COMPONENTS.md)
+- [API Services](docs/components/SERVICES.md)
+- [Panel Components](docs/components/PANELS.md)
+
+---
+
+## 🤝 Contribution
+
+1. Fork edin
+2. Feature branch yaradın (`git checkout -b feature/amazing`)
+3. Commit edin (`git commit -m 'Add amazing feature'`)
+4. Push edin (`git push origin feature/amazing`)
+5. Pull Request açın
+
+---
+
+## 📝 License
+
+MIT License - Hakaton layihəsi
+
+---
+
+## 👥 Team
+
+FireBug Navigator - Hakaton 2024
+
+---
+
+## 💡 Tövsiyələr və Gələcək İnkişaf
+
+### Qısa müddət
+- [ ] Dark mode toggle
+- [ ] Mobile responsive
+- [ ] Hotspot clustering (performance)
+- [ ] Time-series animation
+
+### Orta müddət
+- [ ] Real-time WebSocket updates
+- [ ] User authentication
+- [ ] Saved AOI/Analysis history
+- [ ] Alert/notification system
+
+### Uzun müddət
+- [ ] ML-based fire prediction
+- [ ] Multi-user collaboration
+- [ ] Mobile app (React Native)
+- [ ] API for third-party integration

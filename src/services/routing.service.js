@@ -368,7 +368,7 @@ export function formatDuration(seconds) {
   return `${minutes} dəqiqə`;
 }
 
-export default {
+const RoutingService = {
   getRoute,
   getRouteWithWaypoints,
   findSafeAlternativeRoute,
@@ -376,3 +376,5 @@ export default {
   formatDuration,
   ROUTE_PROFILES
 };
+
+export default RoutingService;

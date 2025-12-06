@@ -2,61 +2,14 @@
  * Sentinel Hub API Service
  * Peyk görüntüləri və NBR/dNBR hesablamaları üçün
  * API Docs: https://docs.sentinel-hub.com/api/latest/
+ * 
+ * Qeyd: Bütün API sorğuları server-side route-lar vasitəsilə edilir (CORS fix)
  */
 
 import axios from "axios";
 
-const SENTINEL_AUTH_URL = "https://services.sentinel-hub.com/oauth/token";
-const SENTINEL_PROCESS_URL = "https://services.sentinel-hub.com/api/v1/process";
-const SENTINEL_CATALOG_URL = "https://services.sentinel-hub.com/api/v1/catalog/1.0.0/search";
-
-let accessToken = null;
-let tokenExpiry = null;
-
 /**
- * OAuth2 token almaq
- * @returns {Promise<string>} - Access token
- */
-async function getAccessToken() {
-  const clientId = process.env.NEXT_PUBLIC_SENTINEL_CLIENT_ID;
-  const clientSecret = process.env.NEXT_PUBLIC_SENTINEL_CLIENT_SECRET;
-
-  if (!clientId || !clientSecret) {
-    console.warn("Sentinel Hub credentials təyin edilməyib");
-    return null;
-  }
-
-  // Token hələ validdirsə, yenisini almağa ehtiyac yoxdur
-  if (accessToken && tokenExpiry && Date.now() < tokenExpiry) {
-    return accessToken;
-  }
-
-  try {
-    const response = await axios.post(SENTINEL_AUTH_URL, 
-      new URLSearchParams({
-        grant_type: "client_credentials",
-        client_id: clientId,
-        client_secret: clientSecret
-      }), 
-      {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        }
-      }
-    );
-
-    accessToken = response.data.access_token;
-    tokenExpiry = Date.now() + (response.data.expires_in - 60) * 1000;
-    
-    return accessToken;
-  } catch (error) {
-    console.error("Sentinel Hub auth xətası:", error.message);
-    return null;
-  }
-}
-
-/**
- * Sentinel-2 görüntüsü əldə etmək
+ * Sentinel-2 görüntüsü əldə etmək - Server-side API route vasitəsilə
  * @param {Object} params - Parametrlər
  * @param {Array} params.bbox - [west, south, east, north]
  * @param {string} params.date - Tarix (YYYY-MM-DD)
@@ -66,64 +19,25 @@ async function getAccessToken() {
  * @returns {Promise<string>} - Base64 encoded image
  */
 export async function getSentinelImage({ bbox, date, type = "truecolor", width = 512, height = 512 }) {
-  const token = await getAccessToken();
-  
-  if (!token) {
-    // Demo görüntü qaytar
-    return getDemoImage(type);
-  }
-
-  const evalscript = getEvalscript(type);
-  const [west, south, east, north] = bbox;
-
-  const requestBody = {
-    input: {
-      bounds: {
-        bbox: [west, south, east, north],
-        properties: {
-          crs: "http://www.opengis.net/def/crs/EPSG/0/4326"
-        }
-      },
-      data: [
-        {
-          type: "sentinel-2-l2a",
-          dataFilter: {
-            timeRange: {
-              from: `${date}T00:00:00Z`,
-              to: `${date}T23:59:59Z`
-            },
-            maxCloudCoverage: 30
-          }
-        }
-      ]
-    },
-    output: {
-      width,
-      height,
-      responses: [
-        {
-          identifier: "default",
-          format: {
-            type: "image/png"
-          }
-        }
-      ]
-    },
-    evalscript
-  };
-
   try {
-    const response = await axios.post(SENTINEL_PROCESS_URL, requestBody, {
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json",
-        "Accept": "image/png"
-      },
-      responseType: "arraybuffer"
+    console.log(`Sentinel görüntü sorğusu: ${date}, ${type}`);
+    
+    // Server-side API route istifadə et (CORS fix)
+    const response = await axios.post("/api/sentinel/image", {
+      bbox,
+      date,
+      type,
+      width,
+      height
     });
 
-    const base64 = Buffer.from(response.data, "binary").toString("base64");
-    return `data:image/png;base64,${base64}`;
+    if (response.data.error) {
+      console.warn("Sentinel görüntü xətası:", response.data.error);
+      return getDemoImage(type);
+    }
+
+    console.log(`Sentinel görüntü alındı: ${date}`);
+    return response.data.image;
 
   } catch (error) {
     console.error("Sentinel görüntü xətası:", error.message);
@@ -132,87 +46,7 @@ export async function getSentinelImage({ bbox, date, type = "truecolor", width =
 }
 
 /**
- * NBR (Normalized Burn Ratio) hesablamaq üçün evalscript
- * NBR = (NIR - SWIR2) / (NIR + SWIR2)
- * Sentinel-2: B08 (NIR), B12 (SWIR2)
- */
-function getEvalscript(type) {
-  const scripts = {
-    truecolor: `
-      //VERSION=3
-      function setup() {
-        return {
-          input: ["B04", "B03", "B02"],
-          output: { bands: 3 }
-        };
-      }
-      function evaluatePixel(sample) {
-        return [2.5 * sample.B04, 2.5 * sample.B03, 2.5 * sample.B02];
-      }
-    `,
-    nbr: `
-      //VERSION=3
-      function setup() {
-        return {
-          input: ["B08", "B12"],
-          output: { bands: 3 }
-        };
-      }
-      function evaluatePixel(sample) {
-        let nbr = (sample.B08 - sample.B12) / (sample.B08 + sample.B12);
-        // NBR rəng skalası: -1 (yanmış) - 1 (sağlam bitki)
-        if (nbr < -0.25) return [0.5, 0, 0];      // Şiddətli yanğın izi
-        if (nbr < 0) return [1, 0.3, 0];           // Orta yanğın izi
-        if (nbr < 0.1) return [1, 0.7, 0.3];      // Yüngül yanğın izi
-        if (nbr < 0.27) return [1, 1, 0.5];       // Yenidən bərpa
-        if (nbr < 0.44) return [0.7, 1, 0.5];     // Aşağı bitki örtüyü
-        return [0, 0.7, 0];                        // Sağlam bitki
-      }
-    `,
-    dnbr: `
-      //VERSION=3
-      // dNBR üçün pre və post görüntülər lazımdır
-      // Bu sadə NBR vizualizasiyasıdır
-      function setup() {
-        return {
-          input: ["B08", "B12"],
-          output: { bands: 3 }
-        };
-      }
-      function evaluatePixel(sample) {
-        let nbr = (sample.B08 - sample.B12) / (sample.B08 + sample.B12);
-        // dNBR threshold rəngləri
-        if (nbr < -0.1) return [0.4, 0, 0];       // Yüksək severity
-        if (nbr < 0.1) return [1, 0.4, 0];        // Orta-yüksək
-        if (nbr < 0.27) return [1, 0.8, 0];       // Orta-aşağı
-        if (nbr < 0.44) return [1, 1, 0.5];       // Aşağı severity
-        return [0, 0.6, 0];                        // Yanmamış
-      }
-    `,
-    ndvi: `
-      //VERSION=3
-      function setup() {
-        return {
-          input: ["B04", "B08"],
-          output: { bands: 3 }
-        };
-      }
-      function evaluatePixel(sample) {
-        let ndvi = (sample.B08 - sample.B04) / (sample.B08 + sample.B04);
-        if (ndvi < 0) return [0.5, 0.5, 0.5];
-        if (ndvi < 0.2) return [0.9, 0.9, 0.7];
-        if (ndvi < 0.4) return [0.7, 0.9, 0.5];
-        if (ndvi < 0.6) return [0.4, 0.8, 0.3];
-        return [0.1, 0.6, 0.1];
-      }
-    `
-  };
-
-  return scripts[type] || scripts.truecolor;
-}
-
-/**
- * Mövcud görüntüləri axtarmaq (Catalog API)
+ * Mövcud görüntüləri axtarmaq - Server-side API route vasitəsilə
  * @param {Object} params
  * @param {Array} params.bbox - Bounding box
  * @param {string} params.startDate - Başlanğıc tarix
@@ -220,37 +54,24 @@ function getEvalscript(type) {
  * @returns {Promise<Array>} - Mövcud görüntülər
  */
 export async function searchAvailableImages({ bbox, startDate, endDate }) {
-  const token = await getAccessToken();
-  
-  if (!token) {
-    return generateDemoImageList(startDate, endDate);
-  }
-
-  const [west, south, east, north] = bbox;
-
   try {
-    const response = await axios.post(SENTINEL_CATALOG_URL, {
-      bbox: [west, south, east, north],
-      datetime: `${startDate}T00:00:00Z/${endDate}T23:59:59Z`,
-      collections: ["sentinel-2-l2a"],
-      limit: 20,
-      filter: {
-        op: "<=",
-        args: [{ property: "eo:cloud_cover" }, 30]
-      }
-    }, {
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json"
-      }
+    console.log(`Sentinel axtarış: ${startDate} - ${endDate}`);
+    
+    const response = await axios.post("/api/sentinel/search", {
+      bbox,
+      startDate,
+      endDate
     });
 
-    return response.data.features.map(f => ({
-      id: f.id,
-      date: f.properties.datetime.split("T")[0],
-      cloudCover: f.properties["eo:cloud_cover"],
-      satellite: f.properties["platform"]
-    }));
+    if (response.data.error) {
+      console.warn("Sentinel axtarış xətası:", response.data.error);
+      return generateDemoImageList(startDate, endDate);
+    }
+
+    const images = response.data.images || [];
+    console.log(`${images.length} görüntü tapıldı`);
+    
+    return images.length > 0 ? images : generateDemoImageList(startDate, endDate);
 
   } catch (error) {
     console.error("Sentinel catalog xətası:", error.message);
@@ -259,17 +80,17 @@ export async function searchAvailableImages({ bbox, startDate, endDate }) {
 }
 
 /**
- * Demo görüntü qaytarmaq
+ * Demo görüntü qaytarmaq - real peyk görüntüsü əvəzinə placeholder
  */
 function getDemoImage(type) {
-  // Placeholder görüntü (1x1 pixel) - real layihədə daha böyük olacaq
-  const colors = {
-    truecolor: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-    nbr: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-    dnbr: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-    ndvi: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+P+/HgAElAI/dN5mLwAAAABJRU5ErkJggg=="
+  // Unsplash-dan real peyk görüntüləri (demo üçün)
+  const demoImages = {
+    truecolor: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=512&h=512&fit=crop",
+    nbr: "https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?w=512&h=512&fit=crop",
+    dnbr: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=512&h=512&fit=crop",
+    ndvi: "https://images.unsplash.com/photo-1569163139599-0f4517e36f51?w=512&h=512&fit=crop"
   };
-  return `data:image/png;base64,${colors[type] || colors.truecolor}`;
+  return demoImages[type] || demoImages.truecolor;
 }
 
 /**
@@ -322,9 +143,10 @@ export async function getBeforeAfterImages({ bbox, preDate, postDate }) {
   };
 }
 
-export default {
+const SentinelService = {
   getSentinelImage,
   searchAvailableImages,
-  getBeforeAfterImages,
-  getAccessToken
+  getBeforeAfterImages
 };
+
+export default SentinelService;

@@ -8,6 +8,7 @@ import axios from "axios";
 
 const FIRMS_BASE_URL = "https://firms.modaps.eosdis.nasa.gov/api/area";
 const FIRMS_MAP_KEY = process.env.NEXT_PUBLIC_FIRMS_API_KEY;
+console.log(FIRMS_MAP_KEY);
 
 /**
  * Data source konfiqurasiyaları
