@@ -13,7 +13,7 @@ import {
 
 /**
  * MapToolbar Component
- * Xəritə üzərindəki tool bar
+ * Map toolbar with navigation and layer controls
  */
 export default function MapToolbar() {
   const { 
@@ -26,17 +26,17 @@ export default function MapToolbar() {
     resetAnalysis
   } = useMapStore();
 
-  // Bakı-ya qayıt
+  // Return to default view
   const goToDefault = () => {
     setMapCenter([40.4093, 49.8671]);
     setMapZoom(10);
   };
 
-  // AOI-yə zoom
+  // Zoom to AOI
   const zoomToAOI = () => {
     if (aoiBounds) {
-      // MapView-da BoundsUpdater bunu həll edir
-      // Burada sadəcə trigger edirik
+      // BoundsUpdater in MapView handles this
+      // Just trigger the update here
       useMapStore.setState({ aoiBounds: [...aoiBounds] });
     }
   };
@@ -60,7 +60,7 @@ export default function MapToolbar() {
           size="sm"
           onClick={zoomToAOI}
           className="shadow-lg"
-          title="AOI-yə zoom"
+          title="Zoom to AOI"
         >
           <Crosshair className="w-4 h-4" />
         </Button>
@@ -72,7 +72,7 @@ export default function MapToolbar() {
         size="sm"
         onClick={goToDefault}
         className="shadow-lg"
-        title="Default görünüşə qayıt"
+        title="Reset to default view"
       >
         <Maximize2 className="w-4 h-4" />
       </Button>
@@ -83,7 +83,7 @@ export default function MapToolbar() {
         size="sm"
         onClick={resetAnalysis}
         className="shadow-lg bg-white dark:bg-gray-800"
-        title="Analizi sıfırla"
+        title="Reset analysis"
       >
         <RotateCcw className="w-4 h-4" />
       </Button>

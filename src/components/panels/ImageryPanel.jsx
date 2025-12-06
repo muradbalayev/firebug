@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Loader2
 } from "lucide-react";
+import Image from "next/image";
 /**
  * ImageryPanel Component
  * Sentinel-2 satellite imagery with Before/After comparison slider
@@ -211,7 +212,9 @@ export default function ImageryPanel() {
             <div className="relative aspect-video bg-gray-900 rounded-lg overflow-hidden select-none">
               {/* Post Image (Background - right side) */}
               {postFireImage && (
-                <img
+                <Image
+                width={1000}
+                height={1000}
                   src={postFireImage} 
                   alt="Post-fire" 
                   className="absolute inset-0 w-full h-full object-cover"
@@ -227,7 +230,9 @@ export default function ImageryPanel() {
                     clipPath: `inset(0 ${100 - sliderValue}% 0 0)` 
                   }}
                 >
-                  <img
+                  <Image
+                  width={1000}
+                  height={1000}
                     src={preFireImage} 
                     alt="Pre-fire" 
                     className="absolute inset-0 w-full h-full object-cover"

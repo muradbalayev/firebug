@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, ZoomControl, useMap, useMapEvents } from "react-leaflet";
 import { useMapStore } from "@/store/useMapStore";
 import DrawControls from "./DrawControls";
@@ -9,12 +9,12 @@ import BurnPolygonLayer from "./BurnPolygonLayer";
 import RouteLayer from "./RouteLayer";
 import AOILayer from "./AOILayer";
 
-// CSS-ləri normal import ilə yüklə
+// Import CSS via link tag to avoid Turbopack issues
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
-import L from "leaflet";
 
-// Leaflet default icon fix (broken icons issue)
+// Fix Leaflet default icons
+import L from "leaflet";
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
@@ -75,7 +75,7 @@ function BoundsUpdater() {
 
 /**
  * MapView Component
- * Əsas Leaflet xəritə görünüşü
+ * Main Leaflet map view
  */
 export default function MapView() {
   const { 

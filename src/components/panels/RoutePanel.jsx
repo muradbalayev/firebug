@@ -17,14 +17,14 @@ import {
 } from "lucide-react";
 
 const PROFILE_OPTIONS = [
-  { value: "driving-car", label: "Avtomobil", icon: Car },
-  { value: "cycling-regular", label: "Velosiped", icon: Bike },
-  { value: "foot-walking", label: "Piyada", icon: Footprints }
+  { value: "driving-car", label: "Car", icon: Car },
+  { value: "cycling-regular", label: "Bicycle", icon: Bike },
+  { value: "foot-walking", label: "Walking", icon: Footprints }
 ];
 
 /**
  * RoutePanel Component
- * Təhlükəsiz marşrut planlaması
+ * Safe evacuation route planning avoiding fire zones
  */
 export default function RoutePanel() {
   const { 
@@ -46,17 +46,17 @@ export default function RoutePanel() {
   const [endInput, setEndInput] = useState("");
   const [inputMode, setInputMode] = useState("map"); // "map" or "manual"
 
-  // Koordinat parse etmək
+  // Parse coordinate input
   const parseCoordinate = (input) => {
     const parts = input.split(",").map(s => parseFloat(s.trim()));
     if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-      // lat, lng formatından lng, lat formatına çevir
+      // Convert from lat, lng to lng, lat format
       return [parts[1], parts[0]];
     }
     return null;
   };
 
-  // Manual koordinat set etmək
+  // Set manual coordinates
   const handleSetStart = () => {
     const coord = parseCoordinate(startInput);
     if (coord) setRouteStart(coord);
@@ -67,7 +67,7 @@ export default function RoutePanel() {
     if (coord) setRouteEnd(coord);
   };
 
-  // Marşrut hesabla
+  // Calculate route
   const calculateRoute = useCallback(async () => {
     if (!routeStart || !routeEnd) return;
 
@@ -94,9 +94,9 @@ export default function RoutePanel() {
         </div>
         <div>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Təhlükəsiz Marşrut
+            Safe Route
           </h2>
-          <p className="text-sm text-gray-500">Yanğın ərazisindən yan keçmə</p>
+          <p className="text-sm text-gray-500">Evacuation route avoiding fire zones</p>
         </div>
       </div>
 
@@ -110,7 +110,7 @@ export default function RoutePanel() {
               : "text-gray-500"
           }`}
         >
-          Xəritədən seç
+          Select on Map
         </button>
         <button
           onClick={() => setInputMode("manual")}
@@ -120,7 +120,7 @@ export default function RoutePanel() {
               : "text-gray-500"
           }`}
         >
-          Manual daxil et
+          Manual Input
         </button>
       </div>
 
@@ -129,7 +129,7 @@ export default function RoutePanel() {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
             <MapPin className="w-4 h-4" />
-            Marşrut Nöqtələri
+            Route Points
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -139,7 +139,7 @@ export default function RoutePanel() {
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-3 h-3 bg-green-500 rounded-full" />
                   <span className="text-sm font-medium text-green-700 dark:text-green-300">
-                    Başlanğıc (A)
+                    Start Point (A)
                   </span>
                 </div>
                 {routeStart ? (
@@ -148,7 +148,7 @@ export default function RoutePanel() {
                   </p>
                 ) : (
                   <p className="text-xs text-green-500">
-                    Xəritədə klik edin (Shift + Click)
+                    Click on map (Shift + Click)
                   </p>
                 )}
               </div>
@@ -157,7 +157,7 @@ export default function RoutePanel() {
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-3 h-3 bg-red-500 rounded-full" />
                   <span className="text-sm font-medium text-red-700 dark:text-red-300">
-                    Son nöqtə (B)
+                    End Point (B)
                   </span>
                 </div>
                 {routeEnd ? (
@@ -166,7 +166,7 @@ export default function RoutePanel() {
                   </p>
                 ) : (
                   <p className="text-xs text-red-500">
-                    Xəritədə klik edin (Ctrl + Click)
+                    Click on map (Ctrl + Click)
                   </p>
                 )}
               </div>
@@ -201,7 +201,7 @@ export default function RoutePanel() {
       {/* Profile Selection */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Nəqliyyat növü</CardTitle>
+          <CardTitle className="text-sm">Transport Mode</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2">
@@ -241,7 +241,7 @@ export default function RoutePanel() {
           leftIcon={<Navigation className="w-4 h-4" />}
           className="flex-1"
         >
-          Marşrut Hesabla
+          Calculate Route
         </Button>
         <Button
           variant="ghost"
@@ -266,17 +266,17 @@ export default function RoutePanel() {
               {currentRoute.isSafe === false ? (
                 <>
                   <AlertTriangle className="w-4 h-4 text-red-600" />
-                  <span className="text-red-700">Təhlükəli Marşrut</span>
+                  <span className="text-red-700">Dangerous Route</span>
                 </>
               ) : currentRoute.type === "detour" ? (
                 <>
                   <AlertTriangle className="w-4 h-4 text-amber-600" />
-                  <span className="text-amber-700">Alternativ Marşrut</span>
+                  <span className="text-amber-700">Alternative Route</span>
                 </>
               ) : (
                 <>
                   <CheckCircle className="w-4 h-4 text-green-600" />
-                  <span className="text-green-700">Təhlükəsiz Marşrut</span>
+                  <span className="text-green-700">Safe Route</span>
                 </>
               )}
             </CardTitle>
@@ -287,13 +287,13 @@ export default function RoutePanel() {
                 <p className="text-lg font-bold text-gray-900 dark:text-white">
                   {formatDistance(currentRoute.metadata?.distance || 0)}
                 </p>
-                <p className="text-xs text-gray-500">Məsafə</p>
+                <p className="text-xs text-gray-500">Distance</p>
               </div>
               <div className="text-center p-2 bg-white/50 dark:bg-gray-800/50 rounded">
                 <p className="text-lg font-bold text-gray-900 dark:text-white">
                   {formatDuration(currentRoute.metadata?.duration || 0)}
                 </p>
-                <p className="text-xs text-gray-500">Müddət</p>
+                <p className="text-xs text-gray-500">Duration</p>
               </div>
             </div>
 
@@ -305,13 +305,13 @@ export default function RoutePanel() {
 
             {currentRoute.type === "detour" && (
               <p className="text-sm text-amber-700 dark:text-amber-300">
-                📍 Yanmış ərazidən yan keçmək üçün waypoint əlavə edildi.
+                📍 Waypoint added to avoid burned area.
               </p>
             )}
 
             {currentRoute.metadata?.isDemo && (
               <p className="text-xs text-gray-500 mt-2">
-                ⚠️ Demo marşrut. Real marşrut üçün ORS API key əlavə edin.
+                ⚠️ Demo route. Add ORS API key for real routing.
               </p>
             )}
           </CardContent>
@@ -323,7 +323,7 @@ export default function RoutePanel() {
         <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200">
           <CardContent className="py-3">
             <p className="text-xs text-blue-700 dark:text-blue-300">
-              💡 {burnPolygons.features.length} burn polygon &quot;avoid area&quot; kimi istifadə edilir.
+              💡 {burnPolygons.features.length} burn polygon(s) used as avoid areas.
             </p>
           </CardContent>
         </Card>

@@ -17,7 +17,8 @@ import {
 
 /**
  * HotspotsPanel Component
- * FIRMS hotspot data yükləmə və göstərmə paneli
+ * NASA FIRMS hotspot data loading and visualization panel
+ * Production-ready for government fire monitoring systems
  */
 export default function HotspotsPanel() {
   const { 
@@ -34,10 +35,10 @@ export default function HotspotsPanel() {
 
   const [localDayRange, setLocalDayRange] = useState(hotspotFilters.dayRange);
 
-  // Hotspotları yüklə
+  // Fetch hotspots from FIRMS API
   const fetchHotspots = useCallback(async () => {
     if (!aoi) {
-      setHotspotsError("Əvvəlcə xəritədə AOI (ərazi) seçin");
+      setHotspotsError("Please draw an Area of Interest (AOI) on the map first");
       return;
     }
 
@@ -60,7 +61,7 @@ export default function HotspotsPanel() {
     }
   }, [aoi, hotspotFilters.source, localDayRange, setHotspots, setHotspotsLoading, setHotspotsError, setHotspotFilters]);
 
-  // Statistikalar
+  // Statistics
   const stats = hotspots ? calculateHotspotStats(hotspots) : null;
 
   return (
@@ -72,7 +73,7 @@ export default function HotspotsPanel() {
         </div>
         <div>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Yanğın Hotspotları
+            Fire Hotspots
           </h2>
           <p className="text-sm text-gray-500">NASA FIRMS real-time data</p>
         </div>
@@ -86,10 +87,10 @@ export default function HotspotsPanel() {
               <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                  AOI seçilməyib
+                  No AOI Selected
                 </p>
                 <p className="text-xs text-amber-600 dark:text-amber-300 mt-1">
-                  Xəritədə polygon və ya düzbucaq çəkərək analiz etmək istədiyiniz ərazini seçin.
+                  Draw a polygon or rectangle on the map to define your area of interest.
                 </p>
               </div>
             </div>
@@ -102,12 +103,12 @@ export default function HotspotsPanel() {
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
             <Filter className="w-4 h-4" />
-            Filtrlər
+            Filters
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <Select
-            label="Data mənbəyi"
+            label="Data Source"
             value={hotspotFilters.source}
             onChange={(e) => setHotspotFilters({ source: e.target.value })}
             options={[
@@ -119,14 +120,14 @@ export default function HotspotsPanel() {
           />
 
           <Select
-            label="Zaman aralığı"
+            label="Time Range"
             value={localDayRange}
             onChange={(e) => setLocalDayRange(Number(e.target.value))}
             options={[
-              { value: 1, label: "Son 24 saat" },
-              { value: 2, label: "Son 48 saat" },
-              { value: 3, label: "Son 3 gün" },
-              { value: 7, label: "Son 1 həftə" }
+              { value: 1, label: "Last 24 hours" },
+              { value: 2, label: "Last 48 hours" },
+              { value: 3, label: "Last 3 days" },
+              { value: 7, label: "Last 7 days" }
             ]}
           />
 
@@ -135,9 +136,9 @@ export default function HotspotsPanel() {
             value={hotspotFilters.minConfidence}
             onChange={(e) => setHotspotFilters({ minConfidence: e.target.value })}
             options={[
-              { value: "low", label: "Hamısı" },
+              { value: "low", label: "All" },
               { value: "nominal", label: "Nominal + High" },
-              { value: "high", label: "Yalnız High" }
+              { value: "high", label: "High Only" }
             ]}
           />
         </CardContent>
@@ -151,7 +152,7 @@ export default function HotspotsPanel() {
         leftIcon={<RefreshCw className="w-4 h-4" />}
         className="w-full"
       >
-        {hotspotsLoading ? "Yüklənir..." : "Hotspotları Yüklə"}
+        {hotspotsLoading ? "Loading..." : "Fetch Hotspots"}
       </Button>
 
       {/* Error */}
@@ -170,31 +171,31 @@ export default function HotspotsPanel() {
       {stats && (
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm">Statistikalar</CardTitle>
+            <CardTitle className="text-sm">Statistics</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-3">
               <StatItem
                 icon={<MapPin className="w-4 h-4" />}
-                label="Toplam hotspot"
+                label="Total Hotspots"
                 value={stats.total}
                 color="text-red-600"
               />
               <StatItem
                 icon={<Thermometer className="w-4 h-4" />}
-                label="Orta parlaqlıq"
+                label="Avg Brightness"
                 value={`${stats.avgBrightness}K`}
                 color="text-orange-600"
               />
               <StatItem
                 icon={<Flame className="w-4 h-4" />}
-                label="Yüksək confidence"
+                label="High Confidence"
                 value={stats.highConfidence}
                 color="text-red-500"
               />
               <StatItem
                 icon={<Calendar className="w-4 h-4" />}
-                label="Orta FRP"
+                label="Avg FRP"
                 value={`${stats.avgFRP} MW`}
                 color="text-amber-600"
               />
@@ -202,7 +203,7 @@ export default function HotspotsPanel() {
 
             {/* Confidence Breakdown */}
             <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <p className="text-xs font-medium text-gray-500 mb-2">Confidence dağılımı</p>
+              <p className="text-xs font-medium text-gray-500 mb-2">Confidence Distribution</p>
               <div className="flex h-2 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700">
                 {stats.total > 0 && (
                   <>
@@ -232,7 +233,7 @@ export default function HotspotsPanel() {
             {hotspots?.metadata?.isDemo && (
               <div className="mt-3 p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
                 <p className="text-xs text-amber-700 dark:text-amber-300">
-                  ⚠️ Demo data göstərilir. Real data üçün FIRMS API key əlavə edin.
+                  ⚠️ Demo data displayed. Add FIRMS API key for real data.
                 </p>
               </div>
             )}

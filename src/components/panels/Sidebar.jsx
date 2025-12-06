@@ -19,31 +19,31 @@ import { useState } from "react";
 const MENU_ITEMS = [
   { 
     id: "hotspots", 
-    label: "Hotspotlar", 
+    label: "Hotspots", 
     icon: Flame, 
-    description: "FIRMS yanğın nöqtələri" 
+    description: "FIRMS fire detection" 
   },
   { 
     id: "imagery", 
-    label: "Peyk Görüntüləri", 
+    label: "Satellite Imagery", 
     icon: Satellite, 
-    description: "Before/After şəkillər" 
+    description: "Before/After comparison" 
   },
   { 
     id: "analysis", 
-    label: "Analiz", 
+    label: "Analysis", 
     icon: BarChart3, 
-    description: "Yanğın sahəsi hesablaması" 
+    description: "Burn area calculation" 
   },
   { 
     id: "route", 
-    label: "Marşrut", 
+    label: "Routing", 
     icon: Route, 
-    description: "Təhlükəsiz yol planı" 
+    description: "Safe evacuation routes" 
   },
   { 
     id: "report", 
-    label: "Hesabat", 
+    label: "Reports", 
     icon: FileText, 
     description: "PDF/CSV export" 
   }
@@ -51,7 +51,7 @@ const MENU_ITEMS = [
 
 /**
  * Sidebar Component
- * Sol panel navigasiyası
+ * Main navigation sidebar
  */
 export default function Sidebar() {
   const { activePanel, setActivePanel } = useMapStore();
@@ -122,7 +122,7 @@ export default function Sidebar() {
           title={isCollapsed ? "Layer Control" : undefined}
         >
           <Layers className="w-5 h-5 shrink-0" />
-          {!isCollapsed && <span className="text-sm">Layer Nəzarəti</span>}
+          {!isCollapsed && <span className="text-sm">Layer Control</span>}
         </button>
       </div>
 
@@ -137,7 +137,7 @@ export default function Sidebar() {
           ) : (
             <>
               <ChevronLeft className="w-5 h-5" />
-              <span className="text-sm">Bağla</span>
+              <span className="text-sm">Collapse</span>
             </>
           )}
         </button>

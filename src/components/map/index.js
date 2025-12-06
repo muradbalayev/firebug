@@ -1,8 +1,9 @@
 // Map Components Index
+// Note: Components with Leaflet/deck.gl are loaded dynamically to avoid SSR issues
+
+// MapContainer - wrapper that dynamically loads MapView (Leaflet)
 export { default as MapContainer } from "./MapContainer";
-export { default as MapView } from "./MapView";
-export { default as DrawControls } from "./DrawControls";
-export { default as AOILayer } from "./AOILayer";
-export { default as HotspotLayer } from "./HotspotLayer";
-export { default as BurnPolygonLayer } from "./BurnPolygonLayer";
-export { default as RouteLayer } from "./RouteLayer";
+
+// Map3DView - uses deck.gl, should be imported dynamically in consuming components
+// Do NOT export here - use dynamic(() => import("@/components/map/Map3DView")) instead
+// export { default as Map3DView } from "./Map3DView";

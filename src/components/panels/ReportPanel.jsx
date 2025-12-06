@@ -59,7 +59,7 @@ export default function ReportPanel() {
       doc.text("FireMap Navigator", 20, 25);
       
       doc.setFontSize(12);
-      doc.text("Yanğın Analiz Hesabatı", 20, 35);
+      doc.text("Fire Analysis Report", 20, 35);
       
       // Reset color
       doc.setTextColor(0, 0, 0);
@@ -70,10 +70,10 @@ export default function ReportPanel() {
       if (reportOptions.includeDates) {
         doc.setFontSize(10);
         doc.setTextColor(100, 100, 100);
-        doc.text(`Hesabat tarixi: ${new Date().toLocaleDateString("az-AZ")}`, 20, yPos);
+        doc.text(`Report Date: ${new Date().toLocaleDateString("en-US")}`, 20, yPos);
         yPos += 7;
         if (preFireDate && postFireDate) {
-          doc.text(`Analiz dövrü: ${preFireDate} - ${postFireDate}`, 20, yPos);
+          doc.text(`Analysis Period: ${preFireDate} - ${postFireDate}`, 20, yPos);
         }
         yPos += 15;
       }
@@ -81,15 +81,15 @@ export default function ReportPanel() {
       // Summary Section
       doc.setFontSize(14);
       doc.setTextColor(0, 0, 0);
-      doc.text("Xülasə", 20, yPos);
+      doc.text("Summary", 20, yPos);
       yPos += 10;
       
       // Summary table
       const summaryData = [
-        ["Göstərici", "Dəyər"],
-        ["Toplam hotspot sayı", String(reportData.hotspots?.total || 0)],
-        ["Yanmış sahə (ha)", reportData.burnArea?.totalHectares?.toFixed(2) || "0"],
-        ["Burn polygon sayı", String(reportData.burnArea?.polygonCount || 0)]
+        ["Metric", "Value"],
+        ["Total Hotspots", String(reportData.hotspots?.total || 0)],
+        ["Burned Area (ha)", reportData.burnArea?.totalHectares?.toFixed(2) || "0"],
+        ["Burn Polygon Count", String(reportData.burnArea?.polygonCount || 0)]
       ];
       
       autoTable(doc, {
@@ -272,37 +272,37 @@ export default function ReportPanel() {
         </div>
         <div>
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Hesabat
+            Reports
           </h2>
-          <p className="text-sm text-gray-500">Export və paylaşma</p>
+          <p className="text-sm text-gray-500">Export & Share</p>
         </div>
       </div>
 
       {/* Data Summary */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Mövcud Data</CardTitle>
+          <CardTitle className="text-sm">Available Data</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             <DataItem 
               label="AOI" 
-              value={aoi ? "Seçilib ✓" : "Seçilməyib"} 
+              value={aoi ? "Selected ✓" : "Not selected"} 
               active={!!aoi}
             />
             <DataItem 
-              label="Hotspotlar" 
+              label="Hotspots" 
               value={hotspots?.features?.length || 0} 
               active={hotspots?.features?.length > 0}
             />
             <DataItem 
-              label="Burn polygonlar" 
+              label="Burn Polygons" 
               value={burnPolygons?.features?.length || 0} 
               active={burnPolygons?.features?.length > 0}
             />
             <DataItem 
-              label="Tarix aralığı" 
-              value={preFireDate && postFireDate ? `${preFireDate} → ${postFireDate}` : "Təyin edilməyib"} 
+              label="Date Range" 
+              value={preFireDate && postFireDate ? `${preFireDate} → ${postFireDate}` : "Not set"} 
               active={!!preFireDate && !!postFireDate}
             />
           </div>
@@ -312,14 +312,14 @@ export default function ReportPanel() {
       {/* Report Options */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Hesabat seçimləri</CardTitle>
+          <CardTitle className="text-sm">Report Options</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
           {Object.entries({
-            includeHotspots: "Hotspot məlumatları",
-            includeBurnArea: "Yanmış sahə məlumatları",
-            includeConfidence: "Confidence xülasəsi",
-            includeDates: "Tarix məlumatları"
+            includeHotspots: "Hotspot Data",
+            includeBurnArea: "Burned Area Data",
+            includeConfidence: "Confidence Summary",
+            includeDates: "Date Information"
           }).map(([key, label]) => (
             <button
               key={key}
@@ -346,7 +346,7 @@ export default function ReportPanel() {
           leftIcon={<Download className="w-4 h-4" />}
           className="w-full"
         >
-          {generating ? "PDF yaradılır..." : "PDF Yüklə"}
+          {generating ? "Generating PDF..." : "Download PDF"}
         </Button>
 
         <div className="flex gap-2">
@@ -376,7 +376,7 @@ export default function ReportPanel() {
         <Card className="bg-amber-50 dark:bg-amber-900/20 border-amber-200">
           <CardContent className="py-3">
             <p className="text-sm text-amber-700 dark:text-amber-300">
-              ⚠️ Hesabat yaratmaq üçün əvvəlcə hotspot və ya burn polygon data yükləyin.
+              ⚠️ Please load hotspot or burn polygon data first to generate reports.
             </p>
           </CardContent>
         </Card>
@@ -386,11 +386,11 @@ export default function ReportPanel() {
       <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200">
         <CardContent className="py-3">
           <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2">
-            📊 Kepler.gl üçün export:
+            📊 Kepler.gl Export:
           </p>
           <p className="text-xs text-blue-600 dark:text-blue-400">
-            GeoJSON fayllarını <a href="https://kepler.gl" target="_blank" rel="noopener" className="underline">kepler.gl</a>-ə 
-            yükləyərək interaktiv vizualizasiya yarada bilərsiniz.
+            Upload GeoJSON files to <a href="https://kepler.gl" target="_blank" rel="noopener" className="underline">kepler.gl</a> for 
+            interactive visualization and advanced analysis.
           </p>
         </CardContent>
       </Card>

@@ -19,14 +19,14 @@ const BASE_LAYERS = [
 ];
 
 const DATA_LAYERS = [
-  { id: "hotspots", label: "Hotspotlar", color: "#ef4444" },
-  { id: "burnPolygons", label: "Burn Polygonlar", color: "#a855f7" },
-  { id: "route", label: "Marşrut", color: "#3b82f6" }
+  { id: "hotspots", label: "Fire Hotspots", color: "#ef4444" },
+  { id: "burnPolygons", label: "Burn Polygons", color: "#a855f7" },
+  { id: "route", label: "Evacuation Route", color: "#3b82f6" }
 ];
 
 /**
  * LayerControl Component
- * Xəritə layer-lərinin idarəsi
+ * Map layer management panel
  */
 export default function LayerControl() {
   const { 
@@ -43,7 +43,7 @@ export default function LayerControl() {
         <CardHeader className="py-2 px-3 flex flex-row items-center justify-between">
           <CardTitle className="text-sm flex items-center gap-2">
             <Layers className="w-4 h-4" />
-            Layerlər
+            Layers
           </CardTitle>
           <button
             onClick={toggleLayerControl}
@@ -55,7 +55,7 @@ export default function LayerControl() {
         <CardContent className="py-2 px-3 space-y-3">
           {/* Base Layers */}
           <div>
-            <p className="text-xs font-medium text-gray-500 mb-2">Baza xəritə</p>
+            <p className="text-xs font-medium text-gray-500 mb-2">Base Map</p>
             <div className="space-y-1">
               {BASE_LAYERS.map((layer) => {
                 const Icon = layer.icon;
@@ -79,7 +79,7 @@ export default function LayerControl() {
 
           {/* Data Layers */}
           <div>
-            <p className="text-xs font-medium text-gray-500 mb-2">Data layerləri</p>
+            <p className="text-xs font-medium text-gray-500 mb-2">Data Layers</p>
             <div className="space-y-1">
               {DATA_LAYERS.map((layer) => (
                 <button
