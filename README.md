@@ -202,10 +202,6 @@ ml-api/                      # FastAPI ML server
 
 ## 📝 License
 
-MIT License - Hackathon Project 2024
-
----
-
 ## 👥 Team
 
-**FireBug** - Hackathon 2024
+**FireBug** - Hackathon 2025
