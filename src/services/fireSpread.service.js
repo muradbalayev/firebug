@@ -174,18 +174,19 @@ export function predictFireSpread({ hotspots, windData, hours = 6 }) {
       spreadFeatures.push(spreadPolygon);
     });
     
-    // Yayılma ox (arrow) - yalnız ilk 20 hotspot üçün
-    if (index < 20) {
-      const arrowEnd = destinationPoint(coords, spreadRate * 3, spreadDirection);
-      const arrowLine = turf.lineString([coords, arrowEnd]);
-      arrowLine.properties = {
-        hotspotId: index,
-        type: "arrow",
-        spreadDirection,
-        spreadRate: Math.round(spreadRate)
-      };
-      arrowFeatures.push(arrowLine);
-    }
+    // Yayılma ox (arrow) - hər hotspot üçün
+    // Minimum 500m, maksimum 5km arrow uzunluğu
+    const arrowLength = Math.max(500, Math.min(spreadRate * hours, 5000));
+    const arrowEnd = destinationPoint(coords, arrowLength, spreadDirection);
+    const arrowLine = turf.lineString([coords, arrowEnd]);
+    arrowLine.properties = {
+      hotspotId: index,
+      type: "arrow",
+      spreadDirection,
+      spreadRate: Math.round(spreadRate),
+      arrowLength: Math.round(arrowLength)
+    };
+    arrowFeatures.push(arrowLine);
   });
 
   // Bütün yayılma zonalarını birləşdir

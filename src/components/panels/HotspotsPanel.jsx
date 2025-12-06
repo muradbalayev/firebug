@@ -58,6 +58,8 @@ export default function HotspotsPanel() {
 
     } catch (error) {
       setHotspotsError(error.message);
+    } finally {
+      setHotspotsLoading(false);
     }
   }, [aoi, hotspotFilters.source, localDayRange, setHotspots, setHotspotsLoading, setHotspotsError, setHotspotFilters]);
 
@@ -154,6 +156,21 @@ export default function HotspotsPanel() {
       >
         {hotspotsLoading ? "Fetching Hotspots..." : "Fetch Hotspots"}
       </Button>
+
+      {/* Loading Overlay */}
+      {hotspotsLoading && (
+        <Card className="border-blue-200 bg-blue-50 dark:bg-blue-900/20">
+          <CardContent className="py-4">
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              <div>
+                <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Loading hotspots...</p>
+                <p className="text-xs text-blue-500">Fetching data from NASA FIRMS API</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Error */}
       {hotspotsError && (
