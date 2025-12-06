@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useMapStore } from "@/store/useMapStore";
 import { getBeforeAfterImages, searchAvailableImages } from "@/services/sentinel.service";
+import { detectFireFromBase64 } from "@/services/mlPrediction.service";
 import { Button, Card, CardHeader, CardTitle, CardContent, Input } from "@/components/ui";
 import { getBoundingBox, formatDate } from "@/lib/utils";
 import { 
@@ -13,13 +14,23 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
-  Loader2
+  Loader2,
+  Flame,
+  Scan,
+  TestTube,
+  CheckCircle,
+  XCircle,
+  X,
+  ZoomIn,
+  Maximize2
 } from "lucide-react";
 import Image from "next/image";
+import firedemo from "@/app/assets/firedemo.webp";
+
 /**
  * ImageryPanel Component
  * Sentinel-2 satellite imagery with Before/After comparison slider
- * Production-ready for government fire monitoring systems
+ * + ML Fire Detection integration
  */
 export default function ImageryPanel() {
   const { 
@@ -38,6 +49,24 @@ export default function ImageryPanel() {
   const [availableImages, setAvailableImages] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [sliderValue, setSliderValue] = useState(50);
+  
+  // ML Detection state
+  const [mlDetecting, setMlDetecting] = useState(false);
+  const [mlResult, setMlResult] = useState(null);
+  const [testImageLoaded, setTestImageLoaded] = useState(false);
+  const [detectedImage, setDetectedImage] = useState(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+
+  // Close lightbox on ESC key
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === "Escape") setLightboxOpen(false);
+    };
+    if (lightboxOpen) {
+      window.addEventListener("keydown", handleEsc);
+      return () => window.removeEventListener("keydown", handleEsc);
+    }
+  }, [lightboxOpen]);
 
   // Default dates
   const today = new Date();
@@ -84,6 +113,69 @@ export default function ImageryPanel() {
       console.error("Image fetch error:", error);
     }
   }, [aoi, preFireDate, postFireDate, setSentinelLoading, setSentinelImages]);
+
+  // Load test image and run ML detection
+  const runTestDetection = useCallback(async () => {
+    setMlDetecting(true);
+    setMlResult(null);
+    setTestImageLoaded(true);
+    
+    try {
+      // Convert imported image to base64
+      const response = await fetch(firedemo.src);
+      const blob = await response.blob();
+      
+      const base64 = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+      
+      // Send to ML API
+      const result = await detectFireFromBase64(base64);
+      setMlResult(result);
+      
+      if (result.image_with_boxes) {
+        setDetectedImage(result.image_with_boxes);
+      }
+    } catch (error) {
+      console.error("ML Detection error:", error);
+      setMlResult({ error: error.message, fire_detected: false });
+    } finally {
+      setMlDetecting(false);
+    }
+  }, []);
+
+  // Run detection on satellite image
+  const detectOnSatelliteImage = useCallback(async (imageUrl) => {
+    if (!imageUrl) return;
+    
+    setMlDetecting(true);
+    setMlResult(null);
+    
+    try {
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      
+      const base64 = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+      
+      const result = await detectFireFromBase64(base64);
+      setMlResult(result);
+      
+      if (result.image_with_boxes) {
+        setDetectedImage(result.image_with_boxes);
+      }
+    } catch (error) {
+      console.error("Satellite detection error:", error);
+      setMlResult({ error: error.message, fire_detected: false });
+    } finally {
+      setMlDetecting(false);
+    }
+  }, []);
 
   return (
     <div className="h-full flex flex-col gap-4 p-4 overflow-y-auto">
@@ -259,6 +351,27 @@ export default function ImageryPanel() {
               <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/70 rounded text-xs text-white font-medium">
                 After
               </div>
+
+              {/* Analyze After Image Button */}
+              {postFireImage && (
+                <button
+                  onClick={() => detectOnSatelliteImage(postFireImage)}
+                  disabled={mlDetecting}
+                  className="absolute top-2 right-2 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white text-xs font-medium rounded-lg shadow-lg flex items-center gap-1.5 transition-colors"
+                >
+                  {mlDetecting ? (
+                    <>
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <Scan className="w-3 h-3" />
+                      🤖 Analyze with ML
+                    </>
+                  )}
+                </button>
+              )}
               
               {/* Loading indicator */}
               {(!preFireImage || !postFireImage) && (
@@ -290,6 +403,94 @@ export default function ImageryPanel() {
         </Card>
       )}
 
+      {/* ML Fire Detection Section */}
+      <Card className="border-orange-200 dark:border-orange-800">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Flame className="w-4 h-4 text-orange-500" />
+            🤖 ML Fire Detection
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-gray-500">
+            Roboflow deep learning modeli ilə şəkillərdə yanğın aşkarlama
+          </p>
+          
+          {/* Test Image Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={runTestDetection}
+            loading={mlDetecting}
+            leftIcon={<TestTube className="w-4 h-4" />}
+            className="w-full border-orange-300 text-orange-600 hover:bg-orange-50"
+          >
+            {mlDetecting ? "Analyzing..." : "🔥 Test with Demo Fire Image"}
+          </Button>
+
+          {/* Analyzed Image Preview with Bounding Boxes */}
+          {detectedImage && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                  🔍 ML Analysis Result:
+                </p>
+                <button
+                  onClick={() => setLightboxOpen(true)}
+                  className="text-xs text-orange-600 hover:text-orange-700 flex items-center gap-1"
+                >
+                  <Maximize2 className="w-3 h-3" />
+                  Expand
+                </button>
+              </div>
+              <div 
+                className="relative aspect-video bg-gray-900 rounded-lg overflow-hidden border-2 border-orange-400 cursor-pointer group"
+                onClick={() => setLightboxOpen(true)}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={detectedImage}
+                  alt="ML Detection Result"
+                  className="w-full h-full object-contain"
+                />
+                {/* Hover overlay */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                  <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              </div>
+              
+              {/* Detection Stats */}
+              {mlResult && (
+                <div className="flex items-center justify-between text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded">
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Objects detected: <strong className="text-orange-600">{mlResult.detection_count || 0}</strong>
+                  </span>
+                  {mlResult.detections?.[0] && (
+                    <span className="text-green-600 font-mono">
+                      {(mlResult.detections[0].confidence * 100).toFixed(1)}% confidence
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Loading State */}
+          {mlDetecting && (
+            <div className="flex items-center justify-center gap-2 py-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+              <Loader2 className="w-5 h-5 animate-spin text-orange-500" />
+              <span className="text-sm text-orange-600">Analyzing image with ML model...</span>
+            </div>
+          )}
+
+          {mlResult?.is_demo && (
+            <p className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/20 p-2 rounded">
+              ⚠️ Demo mode - Connect ML API for real detection
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Info Card */}
       <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
         <CardContent className="py-3">
@@ -299,6 +500,83 @@ export default function ImageryPanel() {
           </p>
         </CardContent>
       </Card>
+
+      {/* Lightbox Modal */}
+      {lightboxOpen && detectedImage && (
+        <div 
+          className="fixed inset-0 z-9999 bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setLightboxOpen(false)}
+        >
+          {/* Close Button */}
+          <button
+            onClick={() => setLightboxOpen(false)}
+            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+          >
+            <X className="w-6 h-6 text-white" />
+          </button>
+
+          {/* Modal Content */}
+          <div 
+            className="relative max-w-[90vw] max-h-[90vh] bg-gray-900 rounded-xl overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="absolute top-0 left-0 right-0 bg-linear-to-b from-black/70 to-transparent p-4 z-10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Flame className="w-5 h-5 text-orange-500" />
+                  <span className="text-white font-semibold">🤖 ML Fire Detection Result</span>
+                </div>
+                {mlResult && (
+                  <div className="flex items-center gap-4 text-sm">
+                    <span className="text-white/80">
+                      Objects: <strong className="text-orange-400">{mlResult.detection_count || 0}</strong>
+                    </span>
+                    {mlResult.detections?.[0] && (
+                      <span className="text-green-400 font-mono">
+                        {(mlResult.detections[0].confidence * 100).toFixed(1)}% confidence
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Image */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={detectedImage}
+              alt="ML Detection Result - Full Size"
+              className="max-w-[90vw] max-h-[90vh] object-contain"
+            />
+
+            {/* Footer with detections */}
+            {mlResult?.detections && mlResult.detections.length > 0 && (
+              <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/70 to-transparent p-4">
+                <div className="flex flex-wrap gap-2">
+                  {mlResult.detections.map((det, idx) => (
+                    <div 
+                      key={idx}
+                      className="px-3 py-1.5 bg-red-500/80 rounded-full text-white text-sm flex items-center gap-2"
+                    >
+                      <Flame className="w-4 h-4" />
+                      <span>{det.class}</span>
+                      <span className="font-mono bg-white/20 px-2 py-0.5 rounded">
+                        {(det.confidence * 100).toFixed(0)}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Instructions */}
+          <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/50 text-sm">
+            Click anywhere or press ESC to close
+          </p>
+        </div>
+      )}
     </div>
   );
 }

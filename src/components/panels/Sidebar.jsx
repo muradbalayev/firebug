@@ -14,6 +14,8 @@ import {
   ChevronRight
 } from "lucide-react";
 import { useState } from "react";
+import logo from "@/app/assets/icon.png"
+import Image from "next/image";
 
 const MENU_ITEMS = [
   { 
@@ -74,6 +76,9 @@ export default function Sidebar() {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-linear-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
             <Flame className="w-6 h-6 text-white" />
+          </div>
+          <div className="w-20 h-20 overflow-hidden">
+            <Image src={logo} alt="Logo" width={100} height={100}  className="w-full h-full"/>
           </div>
           {!isCollapsed && (
             <div>

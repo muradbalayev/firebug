@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useMapStore } from "@/store/useMapStore";
 import { MapContainer } from "@/components/map";
 import { 
@@ -15,6 +16,7 @@ import {
 import LayerControl from "./LayerControl";
 import MapToolbar from "./MapToolbar";
 import dynamic from "next/dynamic";
+import { Radio } from "lucide-react";
 
 // Dynamic import with proper module resolution
 const Map3DView = dynamic(
@@ -79,17 +81,29 @@ export default function Dashboard() {
         {/* Map Toolbar */}
         <MapToolbar />
 
-        {/* 3D Toggle Button */}
-        <button
-          onClick={() => setShow3D(!show3D)}
-          className={`absolute top-4 right-4 z-50 px-4 py-2 rounded-lg font-medium text-sm shadow-lg transition-all ${
-            show3D 
-              ? "bg-purple-600 text-white hover:bg-purple-700" 
-              : "bg-white dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-          }`}
-        >
-          {show3D ? "2D View" : "3D View"}
-        </button>
+        {/* Top Right Buttons */}
+        <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
+          {/* Live Monitoring Link */}
+          <Link
+            href="/monitoring"
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium text-sm shadow-lg transition-all flex items-center gap-2"
+          >
+            <Radio className="w-4 h-4" />
+            Live Monitoring
+          </Link>
+
+          {/* 3D Toggle Button */}
+          <button
+            onClick={() => setShow3D(!show3D)}
+            className={`px-4 py-2 rounded-lg font-medium text-sm shadow-lg transition-all ${
+              show3D 
+                ? "bg-purple-600 text-white hover:bg-purple-700" 
+                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+            }`}
+          >
+            {show3D ? "2D View" : "3D View"}
+          </button>
+        </div>
 
         {/* Map - 2D or 3D */}
         {show3D ? (

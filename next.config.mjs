@@ -14,6 +14,14 @@ const nextConfig = {
         protocol: "https",
         hostname: "cdnjs.cloudflare.com",
       },
+      {
+        protocol: "https",
+        hostname: "firebug.az",
+      },
+      {
+        protocol: "https",
+        hostname: "server.arcgisonline.com",
+      }
     ],
   },
 };
