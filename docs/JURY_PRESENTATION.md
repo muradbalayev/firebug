@@ -1,55 +1,74 @@
-# 🔥 FireBug Navigator - Jüri Təqdimatı
+# 🔥 FireBug - Jüri Təqdimatı
 
 ## Layihənin Məqsədi
 
-**Problem:** Meşə yanğınları zamanı operativ qərar qəbul etmək çətindir. Yanğın harada baş verir? Hansı sahə yanıb? Təhlükəsiz yol hansıdır?
+**Problem:** Meşə yanğınları zamanı operativ qərar qəbul etmək çətindir. Yanğın harada baş verir? Necə yayılır? Kimlərə xəbər vermək lazımdır?
 
-**Həll:** FireBug Navigator - real-time yanğın monitorinqi, analizi və təhlükəsiz marşrut planlaması üçün vahid platforma.
+**Həll:** FireBug - real-time yanğın monitorinqi, ML ilə aşkarlama, avtomatik alert sistemi və peyk görüntü analizi üçün vahid platforma.
 
 ---
 
 ## 🎯 Əsas Xüsusiyyətlər
 
-### 1. Real-Time Yanğın Aşkarlama
+### 1. 📡 Live Monitoring (Real-Time)
 - **NASA FIRMS** API-dən canlı yanğın hotspot-ları
-- Son 24-48 saat ərzində aşkarlanan yanğınlar
-- Peyk məlumatları: VIIRS (375m dəqiqlik), MODIS (1km)
+- 20 saniyəlik polling ilə avtomatik yenilənmə
+- Azərbaycan sərhədləri GeoJSON ilə göstərilir
+- Esri satellite görüntüləri
 
-### 2. Peyk Görüntü Analizi
+### 2. 🔊 AI Səsli Alert Sistemi
+- Hər yanğın üçün **ayrıca səsli xəbərdarlıq**
+- Text-to-Speech ilə ingilis dilində alert
+- Yanğın lokasiyası, gücü və yayılma istiqaməti oxunur
+- Ardıcıl alert-lər (5 saniyə interval)
+
+### 3. 📱 Telegram Bot İnteqrasiyası
+- Yanğın olduqda **avtomatik Telegram mesajı**
+- Hər yanğın üçün ayrıca mesaj
+- Koordinatlar, FRP, brightness məlumatları
+- Real-time bildirişlər
+
+### 4. 🤖 ML Yanğın Aşkarlama
+- **Roboflow** wildfire detection modeli
+- Satellite görüntülərindən yanğın aşkarlama
+- Bounding box ilə vizualizasiya
+- Custom şəkil yükləyib test etmək imkanı
+
+### 5. 📍 Ağıllı Lokasiya Sistemi
+- Koordinatları **ən yaxın şəhər/rayon** adına çevirir
+- Azərbaycanın 65+ şəhər və rayonu
+- "Near Baku", "15km from Ganja" formatında
+
+### 6. 🛰️ Peyk Görüntü Analizi
 - **Sentinel-2** peyk görüntüləri
-- Before/After müqayisə slider
-- NBR (Normalized Burn Ratio) vizualizasiyası
+- Before/After müqayisə
+- Fire location imagery modal
+- Slider ilə bütün yanğınları görmək
 
-### 3. Yanğın Sahəsi Hesablaması
-- QGIS ilə dNBR analizi
-- Yanmış ərazilərin polygon-ları
-- Hektar ilə sahə hesablaması
-
-### 4. Təhlükəsiz Marşrut Planlaması
-- **OpenRouteService** ilə marşrut hesablama
-- Yanmış ərazilərdən avtomatik yan keçmə
-- Alternativ yollar təklifi
-
-### 5. Hesabat Generasiyası
+### 7. 📊 Hesabat Sistemi
 - PDF hesabat export
-- CSV/GeoJSON data export
-- Kepler.gl ilə inteqrasiya
+- GeoJSON data export
+- Yanğın statistikaları
 
 ---
 
-## 🔄 Necə İşləyir?
+## 🔄 Live Monitoring Necə İşləyir?
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  1. AOI SEÇİMİ  │ ──► │  2. DATA YÜKLƏ  │ ──► │  3. ANALİZ ET   │
-│  Xəritədə ərazi │     │  FIRMS + Sentinel│     │  Burn detection │
+│  1. ÖLKƏ SEÇ    │ ──► │  2. MONİTORİNQ  │ ──► │  3. YANĞIN VAR? │
+│  Azerbaijan     │     │  Start Monitoring│     │  FIRMS API check│
 └─────────────────┘     └─────────────────┘     └─────────────────┘
                                                         │
-                                                        ▼
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  6. HESABAT     │ ◄── │  5. MARŞRUT     │ ◄── │  4. VİZUALİZE   │
-│  PDF/CSV export │     │  Təhlükəsiz yol │     │  Xəritədə göstər│
-└─────────────────┘     └─────────────────┘     └─────────────────┘
+                              YENİ YANĞIN TAPILDI ◄─────┘
+                                      │
+        ┌───────────────────────────────────────────────────────┐
+        │                                                       │
+        ▼                       ▼                       ▼
+┌───────────────┐     ┌───────────────┐     ┌───────────────┐
+│ 🔊 SƏSLİ ALERT│     │ 📱 TELEGRAM   │     │ 🗺️ XƏRİTƏDƏ   │
+│ AI oxuyur     │     │ Bot mesaj     │     │ Marker göstər │
+└───────────────┘     └───────────────┘     └───────────────┘
 ```
 
 ---
@@ -57,170 +76,115 @@
 ## 🛠️ Texniki Arxitektura
 
 ### Frontend Stack
-| Texnologiya | Versiya | Məqsəd |
-|-------------|---------|--------|
-| Next.js | 16 | React framework, SSR |
-| Tailwind CSS | 4 | UI styling |
-| Leaflet | 1.9 | İnteraktiv xəritə |
-| Zustand | 5 | State management |
+| Texnologiya | Məqsəd |
+|-------------|--------|
+| Next.js 15 | React framework |
+| Tailwind CSS | UI styling |
+| Leaflet | İnteraktiv xəritə |
 
-### API İnteqrasiyaları
-| API | Məqsəd | Data |
-|-----|--------|------|
-| NASA FIRMS | Yanğın aşkarlama | Hotspot koordinatları |
-| Sentinel Hub | Peyk görüntüləri | RGB, NBR imagery |
-| OpenRouteService | Marşrut | Yol hesablaması |
+### Backend/API
+| Texnologiya | Məqsəd |
+|-------------|--------|
+| FastAPI | ML API server |
+| Roboflow | Yanğın detection modeli |
+| Telegram Bot API | Bildiriş sistemi |
+
+### Xarici API-lər
+| API | Məqsəd |
+|-----|--------|
+| NASA FIRMS | Real-time yanğın hotspot-ları |
+| Sentinel Hub | Peyk görüntüləri |
+| OpenWeather | Külək məlumatları |
+| Esri | Satellite tile-lar |
 
 ---
 
-## 📊 Data Flow
+## � Telegram Alert Formatı
 
-### Hotspot Data Axını
 ```
-İstifadəçi AOI seçir
-       ↓
-FIRMS API çağırılır (bbox koordinatları ilə)
-       ↓
-CSV response → GeoJSON-a çevrilir
-       ↓
-Xəritədə qırmızı nöqtələr kimi göstərilir
-       ↓
-Statistikalar hesablanır (sayı, confidence, brightness)
-```
+🔥 FIRE INCIDENT 1/3
 
-### Burn Detection Axını
-```
-Sentinel-2 görüntüləri (Pre/Post)
-       ↓
-QGIS-də NBR hesablanır: (NIR - SWIR) / (NIR + SWIR)
-       ↓
-dNBR = NBR_pre - NBR_post
-       ↓
-Threshold (dNBR > 0.1) → Burn mask
-       ↓
-Polygonize → GeoJSON export
-       ↓
-Web app-ə yüklənir → Xəritədə göstərilir
-```
+📍 Location: Near Baku
+🌡️ Brightness: 320K
+⚡ Fire Power: 45.2 MW
+🌬️ Wind: 25 km/h → Northeast
+📐 Coordinates: 40.4093, 49.8671
+⏰ Time: 12/6/2025, 11:00:00 PM
 
-### Safe Route Axını
-```
-Start/End nöqtələri seçilir
-       ↓
-Burn polygons "avoid area" kimi təyin edilir
-       ↓
-OpenRouteService API çağırılır
-       ↓
-Əgər yan keçmə mümkündürsə → Təhlükəsiz marşrut
-Əgər mümkün deyilsə → Xəbərdarlıq + alternativ
+⚠️ Fire spreading Northeast!
 ```
 
 ---
 
-## 🎨 UI/UX Dizayn Qərarları
+## 🔊 Səsli Alert Nümunəsi
 
-### Niyə Bu Layout?
-- **Sol panel**: Workflow addımları - istifadəçi ardıcıl keçir
-- **Sağ panel**: Xəritə - əsas iş sahəsi
-- **Layer control**: Müxtəlif data layer-lərini açıb-bağlamaq
+> *"Fire incident 1 of 3. Location: Near Baku. Fire power: 45.2 megawatts. Spreading Northeast at 25 kilometers per hour."*
+
+---
+
+## 🎨 UI Xüsusiyyətləri
+
+### Live Monitoring Paneli
+- **Sol panel**: Ölkə seçimi, statistikalar, alert-lər
+- **Sağ panel**: Satellite xəritə + yanğın marker-ləri
+- **Modal**: Fire locations slider + ML analiz
 
 ### Rəng Kodlaması
 | Rəng | Məna |
 |------|------|
-| 🔴 Qırmızı | Yüksək təhlükə / High confidence |
-| 🟠 Narıncı | Orta təhlükə / Nominal |
-| 🟢 Yaşıl | Aşağı təhlükə / Təhlükəsiz |
-| 🔵 Mavi | Marşrut / Neyral |
+| 🔴 Qırmızı | Yüksək risk (FRP > 50) |
+| 🟠 Narıncı | Orta risk (FRP 20-50) |
+| � Sarı | Aşağı risk (FRP < 20) |
+| 🟢 Yaşıl | Təhlükəsiz |
 
 ---
 
-## 💡 Confidence Scoring Məntiqi
+## 🚀 Demo Ssenariləri
 
-Burn polygon-ların etibarlılığını qiymətləndirmək üçün:
+### Test Case 1: Live Monitoring
+1. Monitoring → Azerbaijan seç
+2. "Start Monitoring" click
+3. Yanğın varsa avtomatik alert gəlir
+4. Telegram-da mesaj gəlir
 
-```
-ƏGƏR polygon içində FIRMS hotspot VAR:
-    ƏGƏR hotspot.confidence = "high":
-        polygon.confidence = "HIGH" (Qırmızı)
-    YOX İSƏ:
-        polygon.confidence = "MEDIUM" (Narıncı)
-YOX İSƏ:
-    polygon.confidence = "LOW" (Yaşıl)
-```
+### Test Case 2: ML Detection
+1. "View Fire Locations" click
+2. Slider ilə yanğınları gör
+3. "Analyze with ML" click
+4. Bounding box görünür
 
-**Məntiq:** Peyk görüntüsündən aşkarlanan yanmış sahə, real-time hotspot ilə təsdiqlənərsə, daha etibarlıdır.
-
----
-
-## 🚀 Real-World İstifadə Ssenariləri
-
-### Ssenari 1: Fövqəladə Hallar Nazirliyi
-- Yanğın baş verdikdə operativ məlumat
-- Təxliyə marşrutlarının planlaması
-- Zərər qiymətləndirməsi
-
-### Ssenari 2: Meşə Təsərrüfatı
-- Yanğın sonrası sahə inventarizasiyası
-- Bərpa planlaması
-- Tarixi yanğın analizi
-
-### Ssenari 3: Sığorta Şirkətləri
-- Zərərin obyektiv qiymətləndirilməsi
-- Peyk məlumatları ilə sübut
-- Avtomatik hesabat
-
----
-
-## 📈 Gələcək İnkişaf Planı
-
-### Qısa müddət (1-3 ay)
-- [ ] Real-time alert sistemi
-- [ ] Mobile responsive dizayn
-- [ ] Çoxlu AOI dəstəyi
-
-### Orta müddət (3-6 ay)
-- [ ] ML ilə yanğın proqnozu
-- [ ] Tarixi data analizi
-- [ ] API endpoint-ləri (third-party üçün)
-
-### Uzun müddət (6-12 ay)
-- [ ] Mobile app
-- [ ] Drone inteqrasiyası
-- [ ] IoT sensor dəstəyi
-
----
-
-## ⚠️ Məhdudiyyətlər və Həllər
-
-| Məhdudiyyət | Səbəb | Həll |
-|-------------|-------|------|
-| Hotspot gecikməsi | Peyk orbit dövrü | Çoxlu peyk mənbəyi |
-| Bulud örtüyü | Optik peyk limiti | SAR data inteqrasiyası (gələcək) |
-| Routing dəqiqliyi | Yol data keyfiyyəti | OpenStreetMap yeniləmələri |
+### Test Case 3: Custom Image Test
+1. Modal-da "Upload Image" click
+2. Yanğın şəkli yüklə
+3. ML model analiz edir
+4. Nəticə göstərilir
 
 ---
 
 ## 🏆 Layihənin Üstünlükləri
 
-1. **Real API-lər** - Mock data yox, real NASA/ESA məlumatları
-2. **End-to-end həll** - Aşkarlamadan hesabata qədər
-3. **Open Source** - Genişləndirilə bilən arxitektura
-4. **No-code QGIS** - Texniki olmayan istifadəçilər üçün
-5. **Azərbaycan dili** - Lokal istifadə üçün uyğun
+1. **Real-time** - 20 saniyəlik polling
+2. **Multi-channel alert** - Səs + Telegram
+3. **ML Integration** - Roboflow model
+4. **Smart Location** - Koordinat → Şəhər adı
+5. **No duplicate alerts** - Eyni yanğın təkrar alert olmur
+6. **Individual alerts** - Hər yanğın ayrıca bildirilir
 
 ---
 
 ## 📞 Demo
 
-**URL:** http://localhost:3000
+**URL:** http://localhost:3000/monitoring
+
+**Telegram Bot:** @firebug_alert_bot
 
 **Test üçün:**
-1. Xəritədə Azərbaycanın meşə ərazisini seçin
-2. "Hotspotları Yüklə" click edin
-3. "Demo Data" ilə burn polygon yükləyin
-4. Marşrut hesablayın
-5. PDF hesabat export edin
+1. Monitoring səhifəsinə keç
+2. Azerbaijan seç
+3. Telegram Alert toggle aktiv et
+4. "Test Alert (Demo)" click et
+5. Səsli alert + Telegram mesajı gəlir
 
 ---
 
-*FireBug Navigator - Hakaton 2024*
+*FireBug - Hackathon 2024*

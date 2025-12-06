@@ -383,7 +383,7 @@ export default function ReportPanel() {
       )}
 
       {/* Kepler.gl Export Info */}
-      <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200">
+      <Card className="bg-blue-50 hidden dark:bg-blue-900/20 border-blue-200">
         <CardContent className="py-3">
           <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-2">
             📊 Kepler.gl Export:

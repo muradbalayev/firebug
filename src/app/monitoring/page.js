@@ -28,11 +28,14 @@ import {
   ZoomIn,
   Maximize2,
   Upload,
-  FileImage
+  FileImage,
+  Send
 } from "lucide-react";
 import { getHotspots } from "@/services/firms.service";
 import { getWindData } from "@/services/fireSpread.service";
 import { detectFireFromBase64 } from "@/services/mlPrediction.service";
+import { sendFireAlertTelegram, sendTestMessage, sendIndividualFireAlert } from "@/services/telegram.service";
+import { getLocationString } from "@/services/geocoding.service";
 import Image from "next/image";
 import firedemo from "@/app/assets/firedemo.webp";
 
@@ -85,6 +88,13 @@ export default function MonitoringPage() {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [uploadedResult, setUploadedResult] = useState(null);
   const fileInputRef = useRef(null);
+  
+  // Telegram notification state
+  const [telegramEnabled, setTelegramEnabled] = useState(false);
+  const [telegramSending, setTelegramSending] = useState(false);
+  
+  // Track alerted fires to avoid duplicates
+  const alertedFiresRef = useRef(new Set());
   
   const pollingRef = useRef(null);
   const speechRef = useRef(null);
@@ -167,32 +177,92 @@ export default function MonitoringPage() {
 
       setLastUpdate(new Date());
 
-      // Check for new high-risk fires
+      // Check for NEW fires only - avoid duplicate alerts
       if (features.length > 0) {
-        const highRiskFires = features.filter(f => f.properties?.frp > 30);
+        const allFires = features.filter(f => f.properties?.frp > 0);
         
-        if (highRiskFires.length > 0) {
-          const spreadDirection = wind ? getSpreadDirection(wind.direction) : "unknown direction";
+        // Create unique ID for each fire based on coordinates (rounded to avoid float issues)
+        const getFireId = (fire) => {
+          const coords = fire.geometry?.coordinates || [0, 0];
+          return `${coords[0].toFixed(3)}_${coords[1].toFixed(3)}`;
+        };
+        
+        // Filter only NEW fires that haven't been alerted yet
+        const newFires = allFires.filter(fire => {
+          const fireId = getFireId(fire);
+          if (alertedFiresRef.current.has(fireId)) {
+            return false; // Already alerted
+          }
+          alertedFiresRef.current.add(fireId); // Mark as alerted
+          return true;
+        });
+        
+        if (newFires.length > 0) {
+          const spreadDirection = wind?.direction ? getSpreadDirection(wind.direction) : "Northeast";
+          const windSpeed = Math.round(wind?.speed || 15); // Default 15 km/h if no data
           
-          // Create alert
-          const newAlert = {
+          // Process each NEW fire individually
+          const fireIncidents = newFires.map((fire, index) => {
+            const coords = fire.geometry?.coordinates || [0, 0];
+            const lat = coords[1];
+            const lon = coords[0];
+            const location = getLocationString(lat, lon);
+            
+            return {
+              id: Date.now() + index,
+              lat,
+              lon,
+              location,
+              frp: fire.properties?.frp?.toFixed(1) || "N/A",
+              brightness: fire.properties?.bright_ti4?.toFixed(0) || "N/A",
+              spreadDirection,
+              windSpeed,
+              timestamp: new Date()
+            };
+          });
+
+          // Create summary alert for modal
+          const summaryAlert = {
             id: Date.now(),
             timestamp: new Date(),
-            count: highRiskFires.length,
+            count: newFires.length,
             spreadDirection,
-            windSpeed: wind?.speed || 0,
-            hotspots: highRiskFires.slice(0, 5) // Top 5
+            windSpeed,
+            hotspots: newFires.slice(0, 5),
+            incidents: fireIncidents
           };
 
-          setAlerts(prev => [newAlert, ...prev.slice(0, 9)]); // Keep last 10
-          setActiveAlert(newAlert);
+          setAlerts(prev => [summaryAlert, ...prev.slice(0, 9)]);
+          setActiveAlert(summaryAlert);
 
-          // Speak alert
-          const alertText = `Fire Alert! ${highRiskFires.length} active fire${highRiskFires.length > 1 ? 's' : ''} detected in ${country.name}. ` +
-            `Fire is spreading towards ${spreadDirection} with wind speed of ${Math.round(wind?.speed || 0)} kilometers per hour. ` +
-            `Please take immediate action.`;
-          
-          speak(alertText);
+          // Speak each fire alert sequentially
+          const speakFireAlerts = async () => {
+            for (let i = 0; i < Math.min(fireIncidents.length, 5); i++) {
+              const fire = fireIncidents[i];
+              const alertText = `Fire incident ${i + 1} of ${fireIncidents.length}. ` +
+                `Location: ${fire.location}. ` +
+                `Fire power: ${fire.frp} megawatts. ` +
+                `Spreading ${fire.spreadDirection} at ${fire.windSpeed} kilometers per hour.`;
+              
+              speak(alertText);
+              
+              // Wait for speech to finish before next (approximate)
+              await new Promise(resolve => setTimeout(resolve, 5000));
+            }
+          };
+          speakFireAlerts();
+
+          // Send individual Telegram alerts if enabled
+          if (telegramEnabled) {
+            const sendTelegramAlerts = async () => {
+              for (let i = 0; i < fireIncidents.length; i++) {
+                await sendIndividualFireAlert(fireIncidents[i], i + 1, fireIncidents.length);
+                // Small delay between messages to avoid rate limiting
+                await new Promise(resolve => setTimeout(resolve, 500));
+              }
+            };
+            sendTelegramAlerts();
+          }
         }
       }
 
@@ -201,7 +271,7 @@ export default function MonitoringPage() {
     } finally {
       setLoading(false);
     }
-  }, [selectedCountry, speak, getSpreadDirection]);
+  }, [selectedCountry, speak, getSpreadDirection, telegramEnabled]);
 
   // Start/Stop monitoring
   const toggleMonitoring = useCallback(() => {
@@ -236,6 +306,8 @@ export default function MonitoringPage() {
     setHotspots([]);
     setAlerts([]);
     setStats({ total: 0, high: 0, medium: 0, low: 0 });
+    // Clear alerted fires when changing country
+    alertedFiresRef.current.clear();
   };
 
   // Generate satellite image URL for a hotspot
@@ -490,23 +562,95 @@ export default function MonitoringPage() {
 
                 {/* Test Alert Button */}
                 <button
-                  onClick={() => {
+                  onClick={async () => {
+                    // Mock fire incidents for testing
+                    const mockIncidents = [
+                      { id: 1, lat: 40.4093, lon: 49.8671, location: "Near Baku", frp: "45.2", brightness: "320", spreadDirection: "Northeast", windSpeed: 25 },
+                      { id: 2, lat: 40.6828, lon: 46.3606, location: "Near Ganja", frp: "38.7", brightness: "315", spreadDirection: "East", windSpeed: 18 },
+                      { id: 3, lat: 41.1919, lon: 47.1706, location: "Near Shaki", frp: "52.1", brightness: "340", spreadDirection: "Southeast", windSpeed: 22 }
+                    ];
+
                     const testAlert = {
                       id: Date.now(),
                       timestamp: new Date(),
                       count: 3,
                       spreadDirection: "Northeast",
                       windSpeed: 25,
-                      hotspots: []
+                      hotspots: [],
+                      incidents: mockIncidents
                     };
                     setAlerts(prev => [testAlert, ...prev.slice(0, 9)]);
                     setActiveAlert(testAlert);
-                    speak(`Fire Alert! 3 active fires detected in ${COUNTRIES[selectedCountry].name}. Fire is spreading towards Northeast with wind speed of 25 kilometers per hour. Please take immediate action.`);
+
+                    // Speak each fire alert sequentially
+                    const speakAlerts = async () => {
+                      for (let i = 0; i < mockIncidents.length; i++) {
+                        const fire = mockIncidents[i];
+                        speak(`Fire incident ${i + 1} of ${mockIncidents.length}. Location: ${fire.location}. Fire power: ${fire.frp} megawatts. Spreading ${fire.spreadDirection} at ${fire.windSpeed} kilometers per hour.`);
+                        await new Promise(resolve => setTimeout(resolve, 5000));
+                      }
+                    };
+                    speakAlerts();
+                    
+                    // Send individual Telegram alerts if enabled
+                    if (telegramEnabled) {
+                      setTelegramSending(true);
+                      for (let i = 0; i < mockIncidents.length; i++) {
+                        await sendIndividualFireAlert(mockIncidents[i], i + 1, mockIncidents.length);
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                      }
+                      setTelegramSending(false);
+                    }
                   }}
-                  className="w-full mt-2 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+                  disabled={telegramSending}
+                  className="w-full mt-2 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-800 text-white rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-colors"
                 >
-                  🧪 Test Alert (Demo)
+                  {telegramSending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    "🧪 Test Alert (Demo)"
+                  )}
                 </button>
+
+                {/* Telegram Toggle */}
+                <div className="mt-3 flex items-center justify-between">
+                  <label className="text-xs text-gray-400 flex items-center gap-1">
+                    <Send className="w-3 h-3" />
+                    Telegram Alert
+                  </label>
+                  <button
+                    onClick={() => setTelegramEnabled(!telegramEnabled)}
+                    className={`w-10 h-5 rounded-full transition-colors ${
+                      telegramEnabled ? "bg-blue-600" : "bg-gray-700"
+                    }`}
+                  >
+                    <div className={`w-4 h-4 bg-white rounded-full transition-transform ${
+                      telegramEnabled ? "translate-x-5" : "translate-x-0.5"
+                    }`} />
+                  </button>
+                </div>
+                {telegramEnabled && (
+                  <button
+                    onClick={async () => {
+                      setTelegramSending(true);
+                      const result = await sendTestMessage();
+                      setTelegramSending(false);
+                      if (result.success) {
+                        alert("✅ Telegram test mesajı göndərildi!");
+                      } else {
+                        alert("❌ Xəta: " + result.error);
+                      }
+                    }}
+                    disabled={telegramSending}
+                    className="w-full mt-2 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white rounded-lg text-xs font-medium flex items-center justify-center gap-1 transition-colors"
+                  >
+                    <Send className="w-3 h-3" />
+                    Test Telegram
+                  </button>
+                )}
               </div>
 
               {/* Stats */}

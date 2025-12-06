@@ -36,18 +36,18 @@ const MENU_ITEMS = [
     icon: Satellite, 
     description: "Before/After comparison" 
   },
-  { 
-    id: "analysis", 
-    label: "Analysis", 
-    icon: BarChart3, 
-    description: "Burn area calculation" 
-  },
-  { 
-    id: "route", 
-    label: "Routing", 
-    icon: Route, 
-    description: "Fire department routes" 
-  },
+//   { 
+//     id: "analysis", 
+//     label: "Analysis", 
+//     icon: BarChart3, 
+//     description: "Burn area calculation" 
+//   },
+//   { 
+//     id: "route", 
+//     label: "Routing", 
+//     icon: Route, 
+//     description: "Fire department routes" 
+//   },
   { 
     id: "report", 
     label: "Reports", 
@@ -74,11 +74,9 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="p-4 border-b border-gray-800">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-linear-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
-            <Flame className="w-6 h-6 text-white" />
-          </div>
-          <div className="w-20 h-20 overflow-hidden">
-            <Image src={logo} alt="Logo" width={100} height={100}  className="w-full h-full"/>
+ 
+          <div className="w-16 h-16 overflow-hidden">
+            <Image src={logo} alt="Logo" width={100} height={100}  className="w-full h-full object-contain"/>
           </div>
           {!isCollapsed && (
             <div>
