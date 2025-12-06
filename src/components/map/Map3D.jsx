@@ -179,6 +179,42 @@ export default function Map3D({ className = "" }) {
         <MapComponent
           mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
           attributionControl={false}
+          onLoad={(e) => {
+            const map = e.target;
+            // Add 3D buildings
+            if (!map.getLayer('3d-buildings')) {
+              map.addLayer({
+                'id': '3d-buildings',
+                'source': 'composite',
+                'source-layer': 'building',
+                'filter': ['==', 'extrude', 'true'],
+                'type': 'fill-extrusion',
+                'minzoom': 15,
+                'paint': {
+                  'fill-extrusion-color': '#aaa',
+                  'fill-extrusion-height': [
+                    'interpolate',
+                    ['linear'],
+                    ['zoom'],
+                    15,
+                    0,
+                    15.05,
+                    ['get', 'height']
+                  ],
+                  'fill-extrusion-base': [
+                    'interpolate',
+                    ['linear'],
+                    ['zoom'],
+                    15,
+                    0,
+                    15.05,
+                    ['get', 'min_height']
+                  ],
+                  'fill-extrusion-opacity': 0.6
+                }
+              });
+            }
+          }}
         />
       </DeckGL>
 
@@ -215,7 +251,7 @@ export default function Map3D({ className = "" }) {
       </div>
 
       {/* Stats */}
-      <div className="absolute top-4 left-4 bg-black/80 rounded-lg p-4 text-white backdrop-blur-sm pointer-events-none">
+      <div className="absolute top-16 left-4 bg-black/80 rounded-lg p-4 text-white backdrop-blur-sm pointer-events-none">
         <p className="text-xs font-semibold mb-2 text-orange-400">3D Fire Visualization</p>
         <div className="flex gap-6">
           <div>
