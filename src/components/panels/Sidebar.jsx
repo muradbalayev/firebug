@@ -14,7 +14,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import { useState } from "react";
-import logo from "@/app/assets/icon.png"
+import logo from "@/assets/icon.png"
 import Image from "next/image";
 
 const MENU_ITEMS = [

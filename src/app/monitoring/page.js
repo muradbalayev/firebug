@@ -37,7 +37,7 @@ import { detectFireFromBase64 } from "@/services/mlPrediction.service";
 import { sendFireAlertTelegram, sendTestMessage, sendIndividualFireAlert } from "@/services/telegram.service";
 import { getLocationString } from "@/services/geocoding.service";
 import Image from "next/image";
-import firedemo from "@/app/assets/firedemo.webp";
+import firedemo from "@/assets/firedemo.webp";
 
 // Dynamic import for map (no SSR)
 const MonitoringMap = dynamic(() => import("@/components/monitoring/MonitoringMap"), {

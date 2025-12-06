@@ -25,7 +25,7 @@ import {
   Maximize2
 } from "lucide-react";
 import Image from "next/image";
-import firedemo from "@/app/assets/firedemo.webp";
+import firedemo from "@/assets/firedemo.webp";
 
 /**
  * ImageryPanel Component
