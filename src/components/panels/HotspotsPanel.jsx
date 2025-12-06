@@ -149,10 +149,10 @@ export default function HotspotsPanel() {
         onClick={fetchHotspots}
         disabled={!aoi || hotspotsLoading}
         loading={hotspotsLoading}
-        leftIcon={<RefreshCw className="w-4 h-4" />}
+        leftIcon={<RefreshCw className={`w-4 h-4 ${hotspotsLoading ? "animate-spin" : ""}`} />}
         className="w-full"
       >
-        {hotspotsLoading ? "Loading..." : "Fetch Hotspots"}
+        {hotspotsLoading ? "Fetching Hotspots..." : "Fetch Hotspots"}
       </Button>
 
       {/* Error */}

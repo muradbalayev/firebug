@@ -175,44 +175,119 @@ export default function Map3D({ className = "" }) {
         layers={layers}
         getTooltip={getTooltip}
         style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
+        glOptions={{
+          preserveDrawingBuffer: true,
+          depth: true
+        }}
       >
         <MapComponent
-          mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
+          mapStyle="https://tiles.openfreemap.org/styles/liberty"
           attributionControl={false}
           onLoad={(e) => {
             const map = e.target;
-            // Add 3D buildings
+            
+            // OpenFreeMap uses OpenMapTiles schema with 'openmaptiles' source
             if (!map.getLayer('3d-buildings')) {
-              map.addLayer({
-                'id': '3d-buildings',
-                'source': 'composite',
-                'source-layer': 'building',
-                'filter': ['==', 'extrude', 'true'],
-                'type': 'fill-extrusion',
-                'minzoom': 15,
-                'paint': {
-                  'fill-extrusion-color': '#aaa',
-                  'fill-extrusion-height': [
-                    'interpolate',
-                    ['linear'],
-                    ['zoom'],
-                    15,
-                    0,
-                    15.05,
-                    ['get', 'height']
-                  ],
-                  'fill-extrusion-base': [
-                    'interpolate',
-                    ['linear'],
-                    ['zoom'],
-                    15,
-                    0,
-                    15.05,
-                    ['get', 'min_height']
-                  ],
-                  'fill-extrusion-opacity': 0.6
-                }
-              });
+              // Find the first label layer to insert buildings below text
+              const layers = map.getStyle().layers;
+              const labelLayerId = layers.find(
+                (layer) => layer.type === 'symbol' && layer.layout && layer.layout['text-field']
+              )?.id;
+
+              try {
+                // 3D Buildings
+                map.addLayer(
+                  {
+                    'id': '3d-buildings',
+                    'source': 'openmaptiles',
+                    'source-layer': 'building',
+                    'type': 'fill-extrusion',
+                    'minzoom': 14,
+                    'paint': {
+                      'fill-extrusion-color': [
+                        'interpolate',
+                        ['linear'],
+                        ['get', 'render_height'],
+                        0, '#1a1a2e',
+                        50, '#2d2d44',
+                        100, '#3d3d5c',
+                        200, '#4d4d6a'
+                      ],
+                      'fill-extrusion-height': [
+                        'coalesce',
+                        ['get', 'render_height'],
+                        ['get', 'height'],
+                        10
+                      ],
+                      'fill-extrusion-base': [
+                        'coalesce',
+                        ['get', 'render_min_height'],
+                        ['get', 'min_height'],
+                        0
+                      ],
+                      'fill-extrusion-opacity': 0.8
+                    }
+                  },
+                  labelLayerId
+                );
+
+                // 3D Trees/Forest (parks, woods, forest areas)
+                map.addLayer(
+                  {
+                    'id': '3d-trees',
+                    'source': 'openmaptiles',
+                    'source-layer': 'landcover',
+                    'filter': ['in', 'class', 'wood', 'forest', 'grass', 'park'],
+                    'type': 'fill-extrusion',
+                    'minzoom': 14,
+                    'paint': {
+                      'fill-extrusion-color': [
+                        'match',
+                        ['get', 'class'],
+                        'wood', '#1a3d1a',
+                        'forest', '#1a4d1a',
+                        'park', '#2d5a2d',
+                        'grass', '#3d6b3d',
+                        '#2d5a2d'
+                      ],
+                      'fill-extrusion-height': [
+                        'match',
+                        ['get', 'class'],
+                        'wood', 15,
+                        'forest', 20,
+                        'park', 8,
+                        'grass', 2,
+                        10
+                      ],
+                      'fill-extrusion-base': 0,
+                      'fill-extrusion-opacity': 0.7
+                    }
+                  },
+                  '3d-buildings' // Insert below buildings
+                );
+
+                // Additional landuse layer for parks
+                map.addLayer(
+                  {
+                    'id': '3d-parks',
+                    'source': 'openmaptiles',
+                    'source-layer': 'landuse',
+                    'filter': ['in', 'class', 'park', 'cemetery', 'pitch'],
+                    'type': 'fill-extrusion',
+                    'minzoom': 14,
+                    'paint': {
+                      'fill-extrusion-color': '#2d5a2d',
+                      'fill-extrusion-height': 5,
+                      'fill-extrusion-base': 0,
+                      'fill-extrusion-opacity': 0.5
+                    }
+                  },
+                  '3d-trees'
+                );
+
+              } catch (err) {
+                console.warn('Could not add 3D layers:', err.message);
+              }
             }
           }}
         />

@@ -9,8 +9,7 @@ import {
   Route, 
   FileText,
   Layers,
-  Map as MapIcon,
-  Settings,
+  TrendingUp,
   ChevronLeft,
   ChevronRight
 } from "lucide-react";
@@ -22,6 +21,12 @@ const MENU_ITEMS = [
     label: "Hotspots", 
     icon: Flame, 
     description: "FIRMS fire detection" 
+  },
+  { 
+    id: "spread", 
+    label: "Fire Spread", 
+    icon: TrendingUp, 
+    description: "Wind-based prediction" 
   },
   { 
     id: "imagery", 
@@ -39,7 +44,7 @@ const MENU_ITEMS = [
     id: "route", 
     label: "Routing", 
     icon: Route, 
-    description: "Safe evacuation routes" 
+    description: "Fire department routes" 
   },
   { 
     id: "report", 
@@ -72,7 +77,7 @@ export default function Sidebar() {
           </div>
           {!isCollapsed && (
             <div>
-              <h1 className="text-lg font-bold text-white">FireMap</h1>
+              <h1 className="text-lg font-bold text-white">FireBug</h1>
               <p className="text-xs text-gray-400">Navigator</p>
             </div>
           )}

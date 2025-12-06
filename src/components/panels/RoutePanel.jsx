@@ -12,14 +12,13 @@ import {
   CheckCircle,
   Trash2,
   Car,
-  Bike,
-  Footprints
+  Truck
 } from "lucide-react";
 
+// Only vehicle options for fire department
 const PROFILE_OPTIONS = [
   { value: "driving-car", label: "Car", icon: Car },
-  { value: "cycling-regular", label: "Bicycle", icon: Bike },
-  { value: "foot-walking", label: "Walking", icon: Footprints }
+  { value: "driving-hgv", label: "Fire Truck", icon: Truck }
 ];
 
 /**
@@ -82,6 +81,8 @@ export default function RoutePanel() {
       setCurrentRoute(route);
     } catch (error) {
       console.error("Route calculation error:", error);
+    } finally {
+      setRouteLoading(false);
     }
   }, [routeStart, routeEnd, burnPolygons, routeProfile, setRouteLoading, setCurrentRoute]);
 
@@ -96,7 +97,7 @@ export default function RoutePanel() {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             Safe Route
           </h2>
-          <p className="text-sm text-gray-500">Evacuation route avoiding fire zones</p>
+          <p className="text-sm text-gray-500">Fire department route planning</p>
         </div>
       </div>
 
@@ -201,7 +202,7 @@ export default function RoutePanel() {
       {/* Profile Selection */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm">Transport Mode</CardTitle>
+          <CardTitle className="text-sm">Vehicle Type</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2">
@@ -238,10 +239,10 @@ export default function RoutePanel() {
           onClick={calculateRoute}
           disabled={!routeStart || !routeEnd || routeLoading}
           loading={routeLoading}
-          leftIcon={<Navigation className="w-4 h-4" />}
+          leftIcon={<Navigation className={`w-4 h-4 ${routeLoading ? "animate-pulse" : ""}`} />}
           className="flex-1"
         >
-          Calculate Route
+          {routeLoading ? "Calculating..." : "Calculate Route"}
         </Button>
         <Button
           variant="ghost"

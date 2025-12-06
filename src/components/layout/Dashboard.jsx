@@ -9,7 +9,8 @@ import {
   ImageryPanel, 
   AnalysisPanel, 
   RoutePanel, 
-  ReportPanel 
+  ReportPanel,
+  FireSpreadPanel
 } from "@/components/panels";
 import LayerControl from "./LayerControl";
 import MapToolbar from "./MapToolbar";
@@ -48,6 +49,8 @@ export default function Dashboard() {
     switch (activePanel) {
       case "hotspots":
         return <HotspotsPanel />;
+      case "spread":
+        return <FireSpreadPanel />;
       case "imagery":
         return <ImageryPanel />;
       case "analysis":

@@ -52,12 +52,18 @@ const initialState = {
     hotspots: true,
     burnPolygons: true,
     route: true,
+    fireSpread: true,
     preFireImage: false,
     postFireImage: false
   },
   
   // Report Data
-  reportData: null
+  reportData: null,
+  
+  // Fire Spread Prediction
+  fireSpreadPrediction: null,
+  fireSpreadLoading: false,
+  windData: null
 };
 
 export const useMapStore = create(
@@ -183,6 +189,12 @@ export const useMapStore = create(
             [layer]: !state.visibleLayers[layer] 
           }
         })),
+
+        // ============ Fire Spread Actions ============
+        setFireSpreadPrediction: (data) => set({ fireSpreadPrediction: data, fireSpreadLoading: false }),
+        setFireSpreadLoading: (loading) => set({ fireSpreadLoading: loading }),
+        setWindData: (data) => set({ windData: data }),
+        clearFireSpread: () => set({ fireSpreadPrediction: null, windData: null }),
 
         // ============ Report Actions ============
         generateReportData: () => {

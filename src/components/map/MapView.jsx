@@ -8,6 +8,7 @@ import HotspotLayer from "./HotspotLayer";
 import BurnPolygonLayer from "./BurnPolygonLayer";
 import RouteLayer from "./RouteLayer";
 import AOILayer from "./AOILayer";
+import FireSpreadLayer from "./FireSpreadLayer";
 
 // Import CSS via link tag to avoid Turbopack issues
 import "leaflet/dist/leaflet.css";
@@ -113,6 +114,7 @@ export default function MapView() {
       {/* Data Layers */}
       {visibleLayers.hotspots && <HotspotLayer />}
       {visibleLayers.burnPolygons && <BurnPolygonLayer />}
+      {visibleLayers.fireSpread && <FireSpreadLayer />}
       {visibleLayers.route && <RouteLayer />}
 
       {/* Event Handlers */}
