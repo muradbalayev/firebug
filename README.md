@@ -1,179 +1,211 @@
-# 🔥 FireBug Navigator
+# 🔥 FireBug
 
-**Real-time yanğın aşkarlama, analiz və təhlükəsiz marşrut planlaması sistemi**
+**Real-time fire detection, monitoring, ML analysis, and alert notification system**
 
-![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)
+![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)
 ![Tailwind](https://img.shields.io/badge/Tailwind-4-38B2AC?style=flat-square&logo=tailwindcss)
 ![Leaflet](https://img.shields.io/badge/Leaflet-1.9-199900?style=flat-square&logo=leaflet)
+![FastAPI](https://img.shields.io/badge/FastAPI-ML-009688?style=flat-square&logo=fastapi)
 
 ---
 
-## 🎯 Layihə Haqqında
+## 🎯 About
 
-FireBug Navigator yanğın monitorinqi və analizi üçün hərtərəfli bir GIS platformasıdır. NASA FIRMS real-time data, Sentinel-2 peyk görüntüləri və OpenRouteService marşrut planlaması ilə inteqrasiya olunub.
+FireBug is a comprehensive fire monitoring and analysis platform. It integrates NASA FIRMS real-time data, Sentinel-2 satellite imagery, ML-based fire detection, and multi-channel alert systems (Voice + Telegram).
 
-### Əsas Xüsusiyyətlər
+### Key Features
 
-- 🗺️ **AOI Selection** - Xəritədə polygon/rectangle ilə ərazi seçimi
-- 🔥 **FIRMS Hotspots** - Real-time yanğın nöqtələri (VIIRS/MODIS)
-- 🛰️ **Sentinel Imagery** - Before/After peyk görüntüləri
-- 📊 **Burn Analysis** - dNBR əsaslı yanğın sahəsi təhlili
-- 🧭 **Safe Routing** - Yanğın ərazilərindən yan keçən marşrut
-- 📄 **Reporting** - PDF/CSV/GeoJSON export
+- � **Live Monitoring** - Real-time fire hotspots with 20-second polling
+- 🔊 **AI Voice Alerts** - Text-to-Speech alerts for each fire incident
+- � **Telegram Bot** - Automatic fire notifications to Telegram
+- 🤖 **ML Detection** - Roboflow wildfire detection model
+- � **Smart Location** - Coordinates to nearest city/district name
+- 🛰️ **Satellite Imagery** - Esri satellite tiles + fire location modal
+- 🗺️ **GeoJSON Borders** - Azerbaijan borders visualization
+- � **Reports** - PDF/GeoJSON export
 
 ---
 
-## 🚀 Quraşdırma
+## 🚀 Installation
 
-### Tələblər
+### Requirements
 - Node.js 18+
 - npm/yarn/pnpm
 
-### Addımlar
+### Steps
 
 ```bash
-# Repository clone
-git clone https://github.com/your-repo/FireBug-navigator.git
-cd FireBug-navigator
+# Clone repository
+git clone https://github.com/your-repo/firebug.git
+cd firebug
 
-# Dependencies install
+# Install dependencies
 npm install
 
-# Environment konfiqurasiyası
-cp .env.example .env.local
-# .env.local faylına API key-ləri əlavə edin
-
-# Development server
+# Start development server
 npm run dev
 ```
 
-Brauzer: http://localhost:3000
+Open browser: http://localhost:3000
 
 ---
 
-## 🔑 API Keys
+## 🔑 Environment Variables
 
-Aşağıdakı API key-ləri `.env.local` faylına əlavə edin:
-
-| API | Əldə etmə linki | Tələb |
-|-----|-----------------|-------|
-| NASA FIRMS | https://firms.modaps.eosdis.nasa.gov/api/area/ | Pulsuz |
-| Sentinel Hub | https://www.sentinel-hub.com/ | Trial mövcud |
-| OpenRouteService | https://openrouteservice.org/dev/#/signup | Pulsuz tier |
+Create a `.env` file in the root directory:
 
 ```env
-NEXT_PUBLIC_FIRMS_API_KEY=your_key
-NEXT_PUBLIC_SENTINEL_CLIENT_ID=your_id
-NEXT_PUBLIC_SENTINEL_CLIENT_SECRET=your_secret
-NEXT_PUBLIC_ORS_API_KEY=your_key
+# NASA FIRMS API Key (Free)
+NEXT_PUBLIC_FIRMS_API_KEY=your_firms_key
+
+# Sentinel Hub API (Trial available)
+NEXT_PUBLIC_SENTINEL_CLIENT_ID=your_client_id
+NEXT_PUBLIC_SENTINEL_CLIENT_SECRET=your_client_secret
+
+# OpenRouteService API (Free tier)
+NEXT_PUBLIC_ORS_API_KEY=your_ors_key
+
+# Mapbox Token (Optional)
+NEXT_PUBLIC_MAPBOX_TOKEN=your_mapbox_token
+
+# Telegram Bot (Create via @BotFather)
+NEXT_PUBLIC_TELEGRAM_BOT_TOKEN=your_bot_token
+NEXT_PUBLIC_TELEGRAM_CHAT_ID=your_chat_id
 ```
+
+### API Keys Sources
+
+| API | Get Key | Cost |
+|-----|---------|------|
+| NASA FIRMS | https://firms.modaps.eosdis.nasa.gov/api/area/ | Free |
+| Sentinel Hub | https://www.sentinel-hub.com/ | Trial |
+| OpenRouteService | https://openrouteservice.org/dev/#/signup | Free |
+| Telegram Bot | https://t.me/BotFather | Free |
 
 ---
 
-## 📁 Layihə Strukturu
+## 📁 Project Structure
 
 ```
 src/
-├── app/                    # Next.js App Router
+├── app/
+│   ├── page.js              # Main map page
+│   └── monitoring/          # Live monitoring page
 ├── components/
-│   ├── ui/                # Reusable UI (Button, Card, Input)
-│   ├── map/               # Xəritə komponentləri
-│   ├── panels/            # Sidebar panelləri
-│   └── layout/            # Layout komponentləri
-├── services/              # API servisləri
-│   ├── firms.service.js   # NASA FIRMS
-│   ├── sentinel.service.js # Sentinel Hub
-│   └── routing.service.js # OpenRouteService
-├── store/                 # Zustand state
-└── lib/                   # Utilities
+│   ├── ui/                  # Reusable UI components
+│   ├── map/                 # Map components
+│   ├── panels/              # Sidebar panels
+│   └── monitoring/          # Monitoring components
+├── services/
+│   ├── firms.service.js     # NASA FIRMS API
+│   ├── sentinel.service.js  # Sentinel Hub API
+│   ├── telegram.service.js  # Telegram Bot API
+│   ├── geocoding.service.js # Coordinate to location
+│   ├── mlPrediction.service.js # ML API
+│   └── fireSpread.service.js   # Wind data
+└── lib/                     # Utilities
 
-docs/
-├── ARCHITECTURE.md        # Sistem arxitekturası
-├── WORKFLOW.md           # İstifadə təlimatı
-├── QGIS_WORKFLOW.md      # QGIS burn detection
-└── components/           # Komponent dokumentasiyası
+ml-api/                      # FastAPI ML server
+├── main.py                  # API endpoints
+└── requirements.txt         # Python dependencies
 ```
 
 ---
 
-## 🔄 İş Axını
+## 🔄 How It Works
+
+### Live Monitoring Flow
 
 ```
-1. AOI Seçimi     →  Xəritədə ərazi çəkin
-2. Hotspot Yüklə  →  FIRMS API-dən data alın
-3. Görüntü Al     →  Sentinel pre/post imagery
-4. QGIS Analiz    →  NBR/dNBR/Burn polygon
-5. Polygon Yüklə  →  GeoJSON import
-6. Marşrut Planı  →  Təhlükəsiz yol hesabla
-7. Hesabat        →  PDF/CSV export
+1. Select Country  →  Choose Azerbaijan
+2. Start Monitoring →  Begin 20-second polling
+3. Fire Detected?  →  Check FIRMS API
+         │
+         ▼ NEW FIRE FOUND
+         │
+    ┌────┴────┬────────────┐
+    ▼         ▼            ▼
+🔊 Voice   📱 Telegram   🗺️ Map
+  Alert      Message      Marker
+```
+
+### Alert Message Format
+
+**Voice Alert:**
+> "Fire incident 1 of 3. Location: Near Baku. Fire power: 45.2 megawatts. Spreading Northeast at 25 kilometers per hour."
+
+**Telegram Alert:**
+```
+🔥 FIRE INCIDENT 1/3
+
+📍 Location: Near Baku
+🌡️ Brightness: 320K
+⚡ Fire Power: 45.2 MW
+🌬️ Wind: 25 km/h → Northeast
+📐 Coordinates: 40.4093, 49.8671
+⏰ Time: 12/6/2025, 11:00:00 PM
+
+⚠️ Fire spreading Northeast!
 ```
 
 ---
 
-## 📊 Texnologiyalar
+## 📊 Tech Stack
 
-| Kateqoriya | Texnologiya |
-|------------|-------------|
-| Frontend | Next.js 16, React 19 |
+| Category | Technology |
+|----------|------------|
+| Frontend | Next.js 15, React 19 |
 | Styling | Tailwind CSS 4 |
-| State | Zustand |
 | Maps | Leaflet, React-Leaflet |
-| Drawing | Leaflet-Draw |
+| ML Backend | FastAPI, Roboflow |
+| Notifications | Telegram Bot API, Web Speech API |
 | Geo Processing | Turf.js |
 | PDF | jsPDF |
-| HTTP | Axios |
 
 ---
 
-## 📚 Dokumentasiya
+## � Demo
 
-- [Sistem Arxitekturası](docs/ARCHITECTURE.md)
-- [İş Axını Təlimatı](docs/WORKFLOW.md)
-- [QGIS Burn Detection](docs/QGIS_WORKFLOW.md)
-- [Map Components](docs/components/MAP_COMPONENTS.md)
-- [API Services](docs/components/SERVICES.md)
-- [Panel Components](docs/components/PANELS.md)
+### Test Case 1: Live Monitoring
+1. Go to `/monitoring`
+2. Select Azerbaijan
+3. Enable "Telegram Alert" toggle
+4. Click "Start Monitoring"
+5. Wait for fire detection
+
+### Test Case 2: Test Alert
+1. Go to `/monitoring`
+2. Enable "Telegram Alert" toggle
+3. Click "🧪 Test Alert (Demo)"
+4. Voice alert plays + Telegram message sent
+
+### Test Case 3: ML Detection
+1. Click "View Fire Locations"
+2. Use slider to browse hotspots
+3. Click "Analyze with ML"
+4. See bounding boxes on detected fires
 
 ---
 
-## 🤝 Contribution
+## 🏆 Features Highlights
 
-1. Fork edin
-2. Feature branch yaradın (`git checkout -b feature/amazing`)
-3. Commit edin (`git commit -m 'Add amazing feature'`)
-4. Push edin (`git push origin feature/amazing`)
-5. Pull Request açın
+| Feature | Description |
+|---------|-------------|
+| ✅ Real-time | 20-second polling interval |
+| ✅ Multi-channel | Voice + Telegram alerts |
+| ✅ ML Integration | Roboflow wildfire model |
+| ✅ Smart Location | Coordinates → City name |
+| ✅ No Duplicates | Same fire won't alert twice |
+| ✅ Individual Alerts | Each fire reported separately |
 
 ---
 
 ## 📝 License
 
-MIT License - Hakaton layihəsi
+MIT License - Hackathon Project 2024
 
 ---
 
 ## 👥 Team
 
-FireBug Navigator - Hakaton 2024
-
----
-
-## 💡 Tövsiyələr və Gələcək İnkişaf
-
-### Qısa müddət
-- [ ] Dark mode toggle
-- [ ] Mobile responsive
-- [ ] Hotspot clustering (performance)
-- [ ] Time-series animation
-
-### Orta müddət
-- [ ] Real-time WebSocket updates
-- [ ] User authentication
-- [ ] Saved AOI/Analysis history
-- [ ] Alert/notification system
-
-### Uzun müddət
-- [ ] ML-based fire prediction
-- [ ] Multi-user collaboration
-- [ ] Mobile app (React Native)
-- [ ] API for third-party integration
+**FireBug** - Hackathon 2024
